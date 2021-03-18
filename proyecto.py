@@ -14,7 +14,7 @@ engine = connect(
 def comprobariniciosesion(usuario):
     cursor = engine.cursor()
     seleccionar = """Select usuario, contrasena from  usuarios where usuario = %s"""
-    cursor.execute(seleccionar, (usuario))
+    cursor.execute(seleccionar, (usuario,))
     record = cursor.fetchall()
     
     return record
@@ -58,9 +58,6 @@ if opcion =='2':
             print("Contrasena incorrecta")
     else:
         print("Usuario no existe")
-
-
-
 
 
 
