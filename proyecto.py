@@ -1,5 +1,8 @@
 from psycopg2 import *
 from datetime import date
+import pywhatkit as kit
+
+
 engine = connect(
     database="proyecto1datos",
     user="postgres",
@@ -8,13 +11,10 @@ engine = connect(
     port='5432'
 )
 
-
-
-
 def comprobariniciosesion(usuario):
     cursor = engine.cursor()
-    #seleccionar = """Select usuario, contrasena from  usuarios where usuario =%s"""
-    cursor.execute("Select usuario, contrasena from  usuarios where usuario =" + usuario)
+    seleccionar = """Select usuario, contrasena from  usuarios where usuario = %s"""
+    cursor.execute(seleccionar, (usuario))
     record = cursor.fetchall()
     
     return record
@@ -27,7 +27,7 @@ def registrarse(usuario, contrasenaConfirmacion, nombre, suscripcion):
     cursor.execute(insertar, datos)
     engine.commit()
 
-    
+
 
 opcion = input(" 1. Sign Up\n 2. Login\n")
 
@@ -48,19 +48,19 @@ if opcion == '1':
         print("usuario ya existe")
     
         
-
-
-
 if opcion =='2':
     usuario=input('Ingrese su usuario\n ')  
-    if(len(comprobariniciosesion("'"+usuario+ "'")) != 0):
+    if(len(comprobariniciosesion(usuario)) != 0):
         contrasena= input('Ingrese su contraseña\n')
-        if(comprobariniciosesion("'"+usuario+ "'")[0][1] == contrasena):
+        if(comprobariniciosesion(usuario)[0][1] == contrasena):
             print("Contrasena correcta")
         else:
             print("Contrasena incorrecta")
     else:
         print("Usuario no existe")
+
+
+
 
 
 
