@@ -27,13 +27,18 @@ def registrarse(usuario, contrasenaConfirmacion, nombre, suscripcion):
     cursor.execute(insertar, datos)
     engine.commit()
 
-
+def actualizarSuscripcion(usuario):
+    cursor = engine.cursor()
+    actualizar = "Update usuarios set suscripcion = %s where usuario = %s"
+    cursor.execute(actualizar, ('premium',usuario))
+    engine.commit()
+    
 
 opcion = input(" 1. Sign Up\n 2. Login\n")
 
 if opcion == '1':
     nombre = input("Ingrese su nombre\n")
-    usuario = input("Ingrese un usuario\n")
+    usuarios = input("Ingrese un usuario\n")
     contrasena = input("Ingrese su contrasena\n")
     contrasenaConfirmacion = input("Ingrese nuevamente su contrasena\n")
     suscripcion = input("Seleccione el tipo de suscripcion\n1. Gratis \n2. Premium\n")
@@ -57,23 +62,27 @@ if opcion =='2':
             print("Contrasena correcta\n")
             
             if(informacion[0][2] == 'gratis'):
-                print('usuario gratis')
-                opcion = input(" 1.Buscar\n 2.Actualizar Suscripcion ")
-                if(opcion == "1"):
-                    
+                print('USUARIO GRATIS')
+                opcion = input(" 1.Buscar\n 2.Actualizar Suscripcion\n ")
+                
+                if opcion == "1":
+                    print("afag")
                     
                 elif(opcion == "2"):
+                    actualizarSuscripcion(usuario)
+                    print("Suscripcion Actualizada")
                     
                 
-                
             elif(informacion[0][2] == 'premium'):
-                print('usuario premium')            
-                if(opcion == "1"):
-
+                print('USUARIO PREMIUM')            
+                opcion = input(" 1.Buscar\n ")
+                if opcion == "1":
+                    print("afag")
         else:
             print("Contrasena incorrecta")
     else:
         print("Usuario no existe")
+
 
 
 
