@@ -33,47 +33,44 @@ def actualizarSuscripcion(usuario):
     cursor.execute(actualizar, ('premium',usuario))
     engine.commit()
     
-def menuprincipal():
+def esartista(usuario):
     cursor = engine.cursor()
-    saludo = "select nombre from usuarios where usuario = %s"
-    cursor.execute(saludo,(usuario,))
+    seleccionar ="select a.nombre_artistico from artistas a where a.usuario = %s"
+    cursor.execute(seleccionar, (usuario,))
     record = cursor.fetchall()
-    print("Bienvenido "+ str(record))
-    opcion = input("Buscar:\n 1.Cancion \n 2.Artista \n 3.Genero \n 4.Album\n 5.Salir\n")
-    while (True):
-        if opcion = '1':
-            buscar = input("Nombre de la cancion\n")
-            busqueda = "select cancion from canciones where cancion = %s"
-            cursor.execute(busqueda,(buscar,))
-            record = cursor.fetchall()
-            print("Resultado:\n"+str(record))
-            #abrir cancion youtube
-        if opcion = '2':
-            buscar = input("Nombre del Artista\n")
-            busqueda = "select nombre_artistico from artistas where nombre_artistico = %s"
-            cursor.execute(busqueda,(buscar,))
-            record = cursor.fetchall()
-            print("Resultado:\n"+str(record))
-            #abrir cancion youtube
-        if opcion = '3':
-            buscar = input("Nombre del Genero\n")
-            busqueda = "select genero from generos where genero = %s"
-            cursor.execute(busqueda,(buscar,))
-            record = cursor.fetchall()
-            print("Resultado:\n"+str(record))
-            #abrir cancion youtube
-        if opcion = '4':
-            buscar = input("Nombre del Album\n")
-            busqueda = "select album from albumes where album = %s"
-            cursor.execute(busqueda,(buscar,))
-            record = cursor.fetchall()
-            print("Resultado:\n"+str(record))
-            #abrir cancion youtube
-        if opcion = '5':
-            False
+    return record
+
+def chequearartista(nombreartistico):
+    cursor = engine.cursor()
+    seleccionar ="select a.nombre_artistico from artistas a where a.nombre_artistico = %s"
+    cursor.execute(seleccionar, (nombreartistico,))
+    record = cursor.fetchall()
+    return record
+
+def agregarartista(artista, usuario):
+    cursor = engine.cursor()
+    insertar =  " INSERT INTO artistas VALUES (%s,%s)"
+    datos = (artista, usuario)
+    cursor.execute(insertar, datos)
+    engine.commit()
+
+def agregaralbum(albumnombre, nombreartista):
+    today =  date.today()
+    cursor = engine.cursor()
+    insertar =  " INSERT INTO albumes VALUES (%s,%s,%s)"
+    datos = (albumnombre, today, nombreartista)
+    cursor.execute(insertar, datos)
+    engine.commit()
+
+def chequearalbum(albumnombre):
+    cursor = engine.cursor()
+    seleccionar ="select * from albumes where album = %s"
+    cursor.execute(seleccionar, (albumnombre,))
+    record = cursor.fetchall()
+    return record
+
 
 opcion = input(" 1. Sign Up\n 2. Login\n")
-
 if opcion == '1':
     nombre = input("Ingrese su nombre\n")
     usuarios = input("Ingrese un usuario\n")
@@ -98,25 +95,86 @@ if opcion =='2':
         contrasena= input('Ingrese su contraseña\n')
         if(informacion[0][1] == contrasena):
             print("Contrasena correcta\n")
+            nombreartistico = esartista(usuario)
             
-            if(informacion[0][2] == 'gratis'):
-                print('USUARIO GRATIS')
-                opcion = input(" 1.Buscar\n 2.Actualizar Suscripcion\n ")
-                
-                if opcion == "1":
-                    menuprincipal()
+            if(len(nombreartistico) == 0):
+                if(informacion[0][2] == 'gratis'):
+                    print('USUARIO GRATIS')
+                    opcion = input(" 1.Buscar\n 2.Actualizar Suscripcion\n, 3.Darse de alta como Artista o Manager\n")
+        
+                    if opcion == "1":
+                        print("afag")
+                        
+                    elif(opcion == "2"):
+                        actualizarSuscripcion(usuario)
+                        print("Suscripcion Actualizada")
+                        
+                    elif(opcion =="3"):
+                        nombreartistico = input("Ingresa tu nombre Artistico\n")
+                        if(len(chequearartista(nombreartistico)) != 0):
+                            print("Nombre artistico en uso")
+                            
+                        elif(len(chequearartista(nombreartistico)) == 0):
+                            agregarartista(nombreartistico, usuario)
+                            print("Nombre Artistico Agregado")
+                        
+                        
+                elif(informacion[0][2] == 'premium'):
+                    print('USUARIO PREMIUM')            
+                    opcion = input(" 1.Buscar\n 2.Darse de alta como Artista o Manager\n")
+                    if opcion == "1":
+                        print("afag")
                     
-                elif(opcion == "2"):
-                    actualizarSuscripcion(usuario)
-                    print("Suscripcion Actualizada")
-                    
+                    elif(opcion =="2"):
+                        nombreartistico = input("Ingresa tu nombre Artistico\n")
+                        if(len(chequearartista(nombreartistico)) != 0):
+                            print("Nombre artistico en uso")
+                            
+                        elif(len(chequearartista(nombreartistico)) == 0):
+                            agregarartista(nombreartistico, usuario)
+                            print("Nombre Artistico Agregado")                    
+                        
+            elif(len(nombreartistico) != 0):
+                if(informacion[0][2] == 'gratis'):
+                    print('USUARIO GRATIS')
+                    print(nombreartistico[0][0])
+                    opcion = input(" 1.Buscar\n 2.Actualizar Suscripcion\n 3.Registrar Album\n 4.Registrar Track\n")
+                    if opcion == "1":
+                        print("afag")
+                        
+                    elif(opcion == "2"):
+                        actualizarSuscripcion(usuario)
+                        print("Suscripcion Actualizada")
+                        
+                    elif(opcion =="3"):
+                        nombrealbum = input("Ingresa del Album a registrar\n")
+                        if(len(chequearalbum(albumnombre)) == 0):
+                            agregaralbum(nombrealbum, nombreartistico[0][0])
+                            print("Album Agregado Correctamente")
+        
+                        elif(len(chequearalbum(albumnombre)) != 0):
+                            print("Album con dicho nombre ya existe")                        
+                        
+                elif(informacion[0][2] == 'premium'):
+                    print('USUARIO PREMIUM')
+                    print(nombreartistico[0][0])
+                    opcion = input(" 1.Buscar\n 2.Registrar Album\n 3.Registrar Track\n")
+                    if (opcion == "1"):
+                        print("afag")
+                    elif (opcion == "2"):
+                        nombrealbum = input("Ingresa del Album a registrar\n")
+                        if(len(chequearalbum(nombrealbum)) == 0):
+                            agregaralbum(nombrealbum, nombreartistico[0][0])
+                            print("Album Agregado Correctamente")
+        
+                        elif(len(chequearalbum(nombrealbum)) != 0):
+                            print("Album con dicho nombre ya existe")
+                            
                 
-            elif(informacion[0][2] == 'premium'):
-                print('USUARIO PREMIUM')            
-                opcion = input(" 1.Buscar\n ")
-                if opcion == "1":
-                    menuprincipal()
         else:
             print("Contrasena incorrecta")
     else:
         print("Usuario no existe")
+
+
+
