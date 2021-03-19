@@ -13,7 +13,7 @@ engine = connect(
 
 def comprobariniciosesion(usuario):
     cursor = engine.cursor()
-    seleccionar = """Select usuario, contrasena from  usuarios where usuario = %s"""
+    seleccionar = "Select usuario, contrasena, suscripcion from  usuarios where usuario = %s"
     cursor.execute(seleccionar, (usuario,))
     record = cursor.fetchall()
     
@@ -22,7 +22,7 @@ def comprobariniciosesion(usuario):
 def registrarse(usuario, contrasenaConfirmacion, nombre, suscripcion):
     today =  date.today()
     cursor = engine.cursor()
-    insertar =  """ INSERT INTO usuarios(usuario, contrasena, nombre, suscripcion, fecha_inicio_suscripcion, tipo) VALUES (%s,%s,%s,%s,%s,%s)"""
+    insertar =  " INSERT INTO usuarios(usuario, contrasena, nombre, suscripcion, fecha_inicio_suscripcion, tipo) VALUES (%s,%s,%s,%s,%s,%s)"
     datos = (usuario, contrasenaConfirmacion, nombre, suscripcion, today, 'Usuario')
     cursor.execute(insertar, datos)
     engine.commit()
@@ -49,15 +49,33 @@ if opcion == '1':
     
         
 if opcion =='2':
-    usuario=input('Ingrese su usuario\n ')  
-    if(len(comprobariniciosesion(usuario)) != 0):
+    usuario=input('Ingrese su usuario\n ')
+    informacion = comprobariniciosesion(usuario)
+    if(len(informacion) != 0):
         contrasena= input('Ingrese su contraseña\n')
-        if(comprobariniciosesion(usuario)[0][1] == contrasena):
-            print("Contrasena correcta")
+        if(informacion[0][1] == contrasena):
+            print("Contrasena correcta\n")
+            
+            if(informacion[0][2] == 'gratis'):
+                print('usuario gratis')
+                opcion = input(" 1.Buscar\n 2.Actualizar Suscripcion ")
+                if(opcion == "1"):
+                    
+                    
+                elif(opcion == "2"):
+                    
+                
+                
+            elif(informacion[0][2] == 'premium'):
+                print('usuario premium')            
+                if(opcion == "1"):
+
         else:
             print("Contrasena incorrecta")
     else:
         print("Usuario no existe")
+
+
 
 
 
