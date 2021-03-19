@@ -33,6 +33,44 @@ def actualizarSuscripcion(usuario):
     cursor.execute(actualizar, ('premium',usuario))
     engine.commit()
     
+def menuprincipal():
+    cursor = engine.cursor()
+    saludo = "select nombre from usuarios where usuario = %s"
+    cursor.execute(saludo,(usuario,))
+    record = cursor.fetchall()
+    print("Bienvenido "+ str(record))
+    opcion = input("Buscar:\n 1.Cancion \n 2.Artista \n 3.Genero \n 4.Album\n 5.Salir\n")
+    while (True):
+        if opcion = '1':
+            buscar = input("Nombre de la cancion\n")
+            busqueda = "select cancion from canciones where cancion = %s"
+            cursor.execute(busqueda,(buscar,))
+            record = cursor.fetchall()
+            print("Resultado:\n"+str(record))
+            #abrir cancion youtube
+        if opcion = '2':
+            buscar = input("Nombre del Artista\n")
+            busqueda = "select nombre_artistico from artistas where nombre_artistico = %s"
+            cursor.execute(busqueda,(buscar,))
+            record = cursor.fetchall()
+            print("Resultado:\n"+str(record))
+            #abrir cancion youtube
+        if opcion = '3':
+            buscar = input("Nombre del Genero\n")
+            busqueda = "select genero from generos where genero = %s"
+            cursor.execute(busqueda,(buscar,))
+            record = cursor.fetchall()
+            print("Resultado:\n"+str(record))
+            #abrir cancion youtube
+        if opcion = '4':
+            buscar = input("Nombre del Album\n")
+            busqueda = "select album from albumes where album = %s"
+            cursor.execute(busqueda,(buscar,))
+            record = cursor.fetchall()
+            print("Resultado:\n"+str(record))
+            #abrir cancion youtube
+        if opcion = '5':
+            False
 
 opcion = input(" 1. Sign Up\n 2. Login\n")
 
@@ -66,7 +104,7 @@ if opcion =='2':
                 opcion = input(" 1.Buscar\n 2.Actualizar Suscripcion\n ")
                 
                 if opcion == "1":
-                    print("afag")
+                    menuprincipal()
                     
                 elif(opcion == "2"):
                     actualizarSuscripcion(usuario)
@@ -77,14 +115,8 @@ if opcion =='2':
                 print('USUARIO PREMIUM')            
                 opcion = input(" 1.Buscar\n ")
                 if opcion == "1":
-                    print("afag")
+                    menuprincipal()
         else:
             print("Contrasena incorrecta")
     else:
         print("Usuario no existe")
-
-
-
-
-
-
