@@ -86,7 +86,6 @@ def agregarcancion(cancion, codigo):
     engine.commit()
     
 def agregarcanciongenero(codigo, genero):
-    print(genero)
     for i in genero:
         cursor = engine.cursor()
         insertar =  " INSERT INTO tiene_genero_cancion VALUES (%s,%s)"
@@ -218,18 +217,20 @@ if opcion =='2':
                                 print("Genero agregado")
                             else:
                                 print("Genero ya habia sido agregado anteriormente")
-                        print(generos)
                         opcion = input(" 1.Agregar en album existente\n 2.Agregar como sencillo\n ")
                         if(opcion == "1"):
-                            for x in range (len(seleccionaralbumdeartista(nombreartistico[0][0]))):
-                                print(str(x+1) + ". " + seleccionaralbumdeartista(nombreartistico[0][0])[x][0] + ", " +seleccionaralbumdeartista(nombreartistico[0][0])[x][2])
-                                
-                            albumelegido = int(input("Ingresa el numero del album en el que la agregaras\n"))
-                            agregarcancion(cancion, codigocancion)
-                            agregarcanciongenero(codigocancion, generos)
-                            agregarcancionartista(codigocancion, nombreartistico[0][0])
-                            ingresaralbumcancion(codigocancion, seleccionaralbumdeartista(nombreartistico[0][0])[albumelegido-1][3])
-                            print("Cancion Agregada Correctamente")
+                            if(len(seleccionaralbumdeartista(nombreartistico[0][0])) !=0):       
+                                for x in range (len(seleccionaralbumdeartista(nombreartistico[0][0]))):
+                                    print(str(x+1) + ". " + seleccionaralbumdeartista(nombreartistico[0][0])[x][0] + ", " +seleccionaralbumdeartista(nombreartistico[0][0])[x][2])
+                                    
+                                albumelegido = int(input("Ingresa el numero del album en el que la agregaras\n"))
+                                agregarcancion(cancion, codigocancion)
+                                agregarcanciongenero(codigocancion, generos)
+                                agregarcancionartista(codigocancion, nombreartistico[0][0])
+                                ingresaralbumcancion(codigocancion, seleccionaralbumdeartista(nombreartistico[0][0])[albumelegido-1][3])
+                                print("Cancion Agregada Correctamente")
+                            else:
+                                print("No tienes ningun album creado, primero crea uno o agrega cancion como sencillo")
                             
                         if(opcion == "2"):
                             agregarcancion(cancion, codigocancion)
@@ -277,19 +278,22 @@ if opcion =='2':
                                 print("Genero agregado")
                             else:
                                 print("Genero ya habia sido agregado anteriormente")
-                        print(generos)
                         opcion = input(" 1.Agregar en album existente\n 2.Agregar como sencillo\n ")
                         if(opcion == "1"):
-                            for x in range (len(seleccionaralbumdeartista(nombreartistico[0][0]))):
-                                print(str(x+1) + ". " + seleccionaralbumdeartista(nombreartistico[0][0])[x][0] + ", " +seleccionaralbumdeartista(nombreartistico[0][0])[x][2])
+                            if(len(seleccionaralbumdeartista(nombreartistico[0][0])) !=0):       
+                                for x in range (len(seleccionaralbumdeartista(nombreartistico[0][0]))):
+                                    print(str(x+1) + ". " + seleccionaralbumdeartista(nombreartistico[0][0])[x][0] + ", " +seleccionaralbumdeartista(nombreartistico[0][0])[x][2])
+                                    
+                                albumelegido = int(input("Ingresa el numero del album en el que la agregaras\n"))
+                                agregarcancion(cancion, codigocancion)
+                                agregarcanciongenero(codigocancion, generos)
+                                agregarcancionartista(codigocancion, nombreartistico[0][0])
+                                ingresaralbumcancion(codigocancion, seleccionaralbumdeartista(nombreartistico[0][0])[albumelegido-1][3])
+                                print("Cancion Agregada Correctamente")
                                 
-                            albumelegido = int(input("Ingresa el numero del album en el que la agregaras\n"))
-                            agregarcancion(cancion, codigocancion)
-                            agregarcanciongenero(codigocancion, generos)
-                            agregarcancionartista(codigocancion, nombreartistico[0][0])
-                            ingresaralbumcancion(codigocancion, seleccionaralbumdeartista(nombreartistico[0][0])[albumelegido-1][3])
-                            print("Cancion Agregada Correctamente")
-                            
+                            else:
+                                print("No tienes ningun album creado, primero crea uno o agrega cancion como sencillo")
+                                
                         if(opcion == "2"):
                             agregarcancion(cancion, codigocancion)
                             agregarcanciongenero(codigocancion, generos)
@@ -303,6 +307,5 @@ if opcion =='2':
             print("Contrasena incorrecta")
     else:
         print("Usuario no existe")
-
 
 
