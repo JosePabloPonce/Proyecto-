@@ -14,7 +14,7 @@ engine = connect(
 
 def comprobariniciosesion(usuario):
     cursor = engine.cursor()
-    seleccionar = "Select usuario, contrasena, suscripcion from  usuarios where usuario = %s"
+    seleccionar = "Select usuario, contrasena, suscripcion, tipo from  usuarios where usuario = %s"
     cursor.execute(seleccionar, (usuario,))
     record = cursor.fetchall()
     
@@ -80,8 +80,8 @@ def mostrargeneros():
 def agregarcancion(cancion, codigo):
     today =  date.today()
     cursor = engine.cursor()
-    insertar =  " INSERT INTO canciones VALUES (%s,%s,%s,%s)"
-    datos = (cancion, codigo, 0, today )
+    insertar =  " INSERT INTO canciones VALUES (%s,%s,%s,%s,%s )"
+    datos = (cancion, codigo, 0, today, "activa" )
     cursor.execute(insertar, datos)
     engine.commit()
     
@@ -136,11 +136,7 @@ def insertarcancionaldia(usuario):
         return True
     if record[0][0] == 3:
         return False
-
-        
-    
-
-    
+ 
     
 def menuprincipal():
     cursor = engine.cursor()
@@ -263,166 +259,247 @@ if opcion =='2':
         if(informacion[0][1] == contrasena):
             print("Contrasena correcta\n")
             nombreartistico = esartista(usuario)
+            if(informacion[0][3] == 'Usuario'):
+                if(len(nombreartistico) == 0):
+                    if(informacion[0][2] == 'gratis'):
+                        print('USUARIO GRATIS')
+                        opcion = input(" 1.Buscar\n 2.Actualizar Suscripcion\n, 3.Darse de alta como Artista o Manager\n")
             
-            if(len(nombreartistico) == 0):
-                if(informacion[0][2] == 'gratis'):
-                    print('USUARIO GRATIS')
-                    opcion = input(" 1.Buscar\n 2.Actualizar Suscripcion\n, 3.Darse de alta como Artista o Manager\n")
-        
-                    if opcion == "1":
-                        menuprincipal()
-                        
-                    elif(opcion == "2"):
-                        actualizarSuscripcion(usuario)
-                        print("Suscripcion Actualizada")
-                        
-                    elif(opcion =="3"):
-                        nombreartistico = input("Ingresa tu nombre Artistico\n")
-                        if(len(chequearartista(nombreartistico)) != 0):
-                            print("Nombre artistico en uso")
+                        if opcion == "1":
+                            menuprincipal()
                             
-                        elif(len(chequearartista(nombreartistico)) == 0):
-                            agregarartista(nombreartistico, usuario)
-                            print("Nombre Artistico Agregado")
-                        
-                        
-                elif(informacion[0][2] == 'premium'):
-                    print('USUARIO PREMIUM')            
-                    opcion = input(" 1.Buscar\n 2.Darse de alta como Artista o Manager\n")
-                    if opcion == "1":
-                        menuprincipal()
-                    
-                    elif(opcion =="2"):
-                        nombreartistico = input("Ingresa tu nombre Artistico\n")
-                        if(len(chequearartista(nombreartistico)) != 0):
-                            print("Nombre artistico en uso")
+                        elif(opcion == "2"):
+                            actualizarSuscripcion(usuario)
+                            print("Suscripcion Actualizada")
                             
-                        elif(len(chequearartista(nombreartistico)) == 0):
-                            agregarartista(nombreartistico, usuario)
-                            print("Nombre Artistico Agregado")                    
-                        
-            elif(len(nombreartistico) != 0):
-                if(informacion[0][2] == 'gratis'):
-                    print('USUARIO GRATIS')
-                    print(nombreartistico[0][0])
-                    opcion = input(" 1.Buscar\n 2.Actualizar Suscripcion\n 3.Registrar Album\n 4.Registrar Track\n")
-                    if opcion == "1":
-                        menuprincipal()
-                        
-                    elif(opcion == "2"):
-                        actualizarSuscripcion(usuario)
-                        print("Suscripcion Actualizada")
-                        
-                    elif(opcion =="3"):
-                        nombrealbum = input("Ingresa el nombre del Album a registrar\n")
-                        codigoalbum = str((random.randint(3, 100000)))
-                        agregaralbum(nombrealbum, nombreartistico[0][0], codigoalbum)
-                        print("Album Agregado Correctamente")
-                    
-                    elif(opcion =="4"):
-                        cancion = input('Ingresa el nombre de la cancion a registrar\n')
-                        codigocancion = (random.randint(3, 100000))
-                        generos = []
-                        while True:
-                            print("Ingresa el numero del genero o generos a elegir o ingresa '0' para concluir con los generos\n")
-                            for x in range (len(mostrargeneros())):
-                                print(str(x+1) + ". " + mostrargeneros()[x][0])
-                            generoelegido = int(input())
+                        elif(opcion =="3"):
+                            nombreartistico = input("Ingresa tu nombre Artistico\n")
+                            if(len(chequearartista(nombreartistico)) != 0):
+                                print("Nombre artistico en uso")
+                                
+                            elif(len(chequearartista(nombreartistico)) == 0):
+                                agregarartista(nombreartistico, usuario)
+                                print("Nombre Artistico Agregado")
                             
+                            
+                    elif(informacion[0][2] == 'premium'):
+                        print('USUARIO PREMIUM')            
+                        opcion = input(" 1.Buscar\n 2.Darse de alta como Artista o Manager\n")
+                        if opcion == "1":
+                            menuprincipal()
+                        
+                        elif(opcion =="2"):
+                            nombreartistico = input("Ingresa tu nombre Artistico\n")
+                            if(len(chequearartista(nombreartistico)) != 0):
+                                print("Nombre artistico en uso")
+                                
+                            elif(len(chequearartista(nombreartistico)) == 0):
+                                agregarartista(nombreartistico, usuario)
+                                print("Nombre Artistico Agregado")                    
+                            
+                elif(len(nombreartistico) != 0):
+                    if(informacion[0][2] == 'gratis'):
+                        print('USUARIO GRATIS')
+                        print(nombreartistico[0][0])
+                        opcion = input(" 1.Buscar\n 2.Actualizar Suscripcion\n 3.Registrar Album\n 4.Registrar Track\n")
+                        if opcion == "1":
+                            menuprincipal()
+                            
+                        elif(opcion == "2"):
+                            actualizarSuscripcion(usuario)
+                            print("Suscripcion Actualizada")
+                            
+                        elif(opcion =="3"):
+                            nombrealbum = input("Ingresa el nombre del Album a registrar\n")
+                            codigoalbum = str((random.randint(3, 100000)))
+                            agregaralbum(nombrealbum, nombreartistico[0][0], codigoalbum)
+                            print("Album Agregado Correctamente")
+                        
+                        elif(opcion =="4"):
+                            cancion = input('Ingresa el nombre de la cancion a registrar\n')
+                            codigocancion = (random.randint(3, 100000))
+                            generos = []
+                            while True:
+                                print("Ingresa el numero del genero o generos a elegir o ingresa '0' para concluir con los generos\n")
+                                for x in range (len(mostrargeneros())):
+                                    print(str(x+1) + ". " + mostrargeneros()[x][0])
+                                generoelegido = int(input())
+                                
 
-                            if(len(generos) != 0 and generoelegido == 0 ):                                
-                                break
-                            
-                            elif (mostrargeneros()[generoelegido-1][0] not in generos and generoelegido != 0):
-                                generos.append(mostrargeneros()[generoelegido-1][0])
-                                print("Genero agregado")
-                            else:
-                                print("Genero ya habia sido agregado anteriormente")
-                        opcion = input(" 1.Agregar en album existente\n 2.Agregar como sencillo\n ")
-                        if(opcion == "1"):
-                            if(len(seleccionaralbumdeartista(nombreartistico[0][0])) !=0):       
-                                for x in range (len(seleccionaralbumdeartista(nombreartistico[0][0]))):
-                                    print(str(x+1) + ". " + seleccionaralbumdeartista(nombreartistico[0][0])[x][0] + ", " +seleccionaralbumdeartista(nombreartistico[0][0])[x][2])
-                                    
-                                albumelegido = int(input("Ingresa el numero del album en el que la agregaras\n"))
+                                if(len(generos) != 0 and generoelegido == 0 ):                                
+                                    break
+                                
+                                elif (mostrargeneros()[generoelegido-1][0] not in generos and generoelegido != 0):
+                                    generos.append(mostrargeneros()[generoelegido-1][0])
+                                    print("Genero agregado")
+                                else:
+                                    print("Genero ya habia sido agregado anteriormente")
+                            opcion = input(" 1.Agregar en album existente\n 2.Agregar como sencillo\n ")
+                            if(opcion == "1"):
+                                if(len(seleccionaralbumdeartista(nombreartistico[0][0])) !=0):       
+                                    for x in range (len(seleccionaralbumdeartista(nombreartistico[0][0]))):
+                                        print(str(x+1) + ". " + seleccionaralbumdeartista(nombreartistico[0][0])[x][0] + ", " +seleccionaralbumdeartista(nombreartistico[0][0])[x][2])
+                                        
+                                    albumelegido = int(input("Ingresa el numero del album en el que la agregaras\n"))
+                                    agregarcancion(cancion, codigocancion)
+                                    agregarcanciongenero(codigocancion, generos)
+                                    agregarcancionartista(codigocancion, nombreartistico[0][0])
+                                    ingresaralbumcancion(codigocancion, seleccionaralbumdeartista(nombreartistico[0][0])[albumelegido-1][3])
+                                    print("Cancion Agregada Correctamente")
+                                else:
+                                    print("No tienes ningun album creado, primero crea uno o agrega cancion como sencillo")
+                                
+                            if(opcion == "2"):
                                 agregarcancion(cancion, codigocancion)
                                 agregarcanciongenero(codigocancion, generos)
                                 agregarcancionartista(codigocancion, nombreartistico[0][0])
-                                ingresaralbumcancion(codigocancion, seleccionaralbumdeartista(nombreartistico[0][0])[albumelegido-1][3])
-                                print("Cancion Agregada Correctamente")
-                            else:
-                                print("No tienes ningun album creado, primero crea uno o agrega cancion como sencillo")
+                                codigoalbum = str((random.randint(3, 100000)))
+                                agregaralbum(cancion, nombreartistico[0][0], codigoalbum)
+                                ingresaralbumcancion(codigocancion, codigoalbum)
+                                print("Cancion Agregada Correctamente")  
                             
-                        if(opcion == "2"):
-                            agregarcancion(cancion, codigocancion)
-                            agregarcanciongenero(codigocancion, generos)
-                            agregarcancionartista(codigocancion, nombreartistico[0][0])
+            
+                           
+                            
+                    elif(informacion[0][2] == 'premium'):
+                        print('USUARIO PREMIUM')
+                        print(nombreartistico[0][0])
+                        opcion = input(" 1.Buscar\n 2.Registrar Album\n 3.Registrar Track\n")
+                        
+                        if (opcion == "1"):
+                            menuprincipal()
+                            
+                        elif (opcion == "2"):
+                            nombrealbum = input("Ingresa el nombre del Album a registrar\n")
                             codigoalbum = str((random.randint(3, 100000)))
-                            agregaralbum(cancion, nombreartistico[0][0], codigoalbum)
-                            ingresaralbumcancion(codigocancion, codigoalbum)
-                            print("Cancion Agregada Correctamente")  
-                        
-        
-                       
-                        
-                elif(informacion[0][2] == 'premium'):
-                    print('USUARIO PREMIUM')
-                    print(nombreartistico[0][0])
-                    opcion = input(" 1.Buscar\n 2.Registrar Album\n 3.Registrar Track\n")
-                    
-                    if (opcion == "1"):
-                        menuprincipal()
-                        
-                    elif (opcion == "2"):
-                        nombrealbum = input("Ingresa el nombre del Album a registrar\n")
-                        codigoalbum = str((random.randint(3, 100000)))
-                        agregaralbum(nombrealbum, nombreartistico[0][0],codigoalbum)
-                        print("Album Agregado Correctamente")
+                            agregaralbum(nombrealbum, nombreartistico[0][0],codigoalbum)
+                            print("Album Agregado Correctamente")
 
-                            
-                    elif (opcion == "3"):
-                        cancion = input('Ingresa el nombre de la cancion a registrar\n')
-                        codigocancion = (random.randint(3, 100000))
-                        generos = []
-                        while True:
-                            print("Ingresa el numero del genero o generos a elegir o ingresa '0' para concluir con los generos\n")
-                            for x in range (len(mostrargeneros())):
-                                print(str(x+1) + ". " + mostrargeneros()[x][0])
-                            generoelegido = int(input())
-                            
+                                
+                        elif (opcion == "3"):
+                            cancion = input('Ingresa el nombre de la cancion a registrar\n')
+                            codigocancion = (random.randint(3, 100000))
+                            generos = []
+                            while True:
+                                print("Ingresa el numero del genero o generos a elegir o ingresa '0' para concluir con los generos\n")
+                                for x in range (len(mostrargeneros())):
+                                    print(str(x+1) + ". " + mostrargeneros()[x][0])
+                                generoelegido = int(input())
+                                
 
-                            if(len(generos) != 0 and generoelegido == 0 ):                                
-                                break
-                            
-                            elif (mostrargeneros()[generoelegido-1][0] not in generos and generoelegido != 0):
-                                generos.append(mostrargeneros()[generoelegido-1][0])
-                                print("Genero agregado")
-                            else:
-                                print("Genero ya habia sido agregado anteriormente")
-                        opcion = input(" 1.Agregar en album existente\n 2.Agregar como sencillo\n ")
-                        if(opcion == "1"):
-                            if(len(seleccionaralbumdeartista(nombreartistico[0][0])) !=0):       
-                                for x in range (len(seleccionaralbumdeartista(nombreartistico[0][0]))):
-                                    print(str(x+1) + ". " + seleccionaralbumdeartista(nombreartistico[0][0])[x][0] + ", " +seleccionaralbumdeartista(nombreartistico[0][0])[x][2])
+                                if(len(generos) != 0 and generoelegido == 0 ):                                
+                                    break
+                                
+                                elif (mostrargeneros()[generoelegido-1][0] not in generos and generoelegido != 0):
+                                    generos.append(mostrargeneros()[generoelegido-1][0])
+                                    print("Genero agregado")
+                                else:
+                                    print("Genero ya habia sido agregado anteriormente")
+                            opcion = input(" 1.Agregar en album existente\n 2.Agregar como sencillo\n ")
+                            if(opcion == "1"):
+                                if(len(seleccionaralbumdeartista(nombreartistico[0][0])) !=0):       
+                                    for x in range (len(seleccionaralbumdeartista(nombreartistico[0][0]))):
+                                        print(str(x+1) + ". " + seleccionaralbumdeartista(nombreartistico[0][0])[x][0] + ", " +seleccionaralbumdeartista(nombreartistico[0][0])[x][2])
+                                        
+                                    albumelegido = int(input("Ingresa el numero del album en el que la agregaras\n"))
+                                    agregarcancion(cancion, codigocancion)
+                                    agregarcanciongenero(codigocancion, generos)
+                                    agregarcancionartista(codigocancion, nombreartistico[0][0])
+                                    ingresaralbumcancion(codigocancion, seleccionaralbumdeartista(nombreartistico[0][0])[albumelegido-1][3])
+                                    print("Cancion Agregada Correctamente")
                                     
-                                albumelegido = int(input("Ingresa el numero del album en el que la agregaras\n"))
+                                else:
+                                    print("No tienes ningun album creado, primero crea uno o agrega cancion como sencillo")
+                                    
+                            if(opcion == "2"):
                                 agregarcancion(cancion, codigocancion)
                                 agregarcanciongenero(codigocancion, generos)
                                 agregarcancionartista(codigocancion, nombreartistico[0][0])
-                                ingresaralbumcancion(codigocancion, seleccionaralbumdeartista(nombreartistico[0][0])[albumelegido-1][3])
+                                codigoalbum = str((random.randint(3, 100000)))
+                                agregaralbum(cancion, nombreartistico[0][0], codigoalbum)
+                                ingresaralbumcancion(codigocancion, codigoalbum)
                                 print("Cancion Agregada Correctamente")
                                 
-                            else:
-                                print("No tienes ningun album creado, primero crea uno o agrega cancion como sencillo")
+            elif(informacion[0][3] == 'Administrador'):
+                if(len(nombreartistico) == 0):      
+                    if(informacion[0][2] == 'premium'):
+                        print('ADMINISTRADOR')
+                        print('USUARIO PREMIUM')            
+                        opcion = input(" 1.Buscar\n 2.Darse de alta como Artista o Manager\n 3.Inactivar cancion del catalogo\n 4.Modificar cancion\n 5.Modificar Artista\n 6.Eliminar una cancion\n 7.Eliminar album\n 8.Eliminar artista\n")
+                        if opcion == "1":
+                            menuprincipal()
+                        
+                        elif(opcion =="2"):
+                            nombreartistico = input("Ingresa tu nombre Artistico\n")
+                            if(len(chequearartista(nombreartistico)) != 0):
+                                print("Nombre artistico en uso")
                                 
-                        if(opcion == "2"):
-                            agregarcancion(cancion, codigocancion)
-                            agregarcanciongenero(codigocancion, generos)
-                            agregarcancionartista(codigocancion, nombreartistico[0][0])
+                            elif(len(chequearartista(nombreartistico)) == 0):
+                                agregarartista(nombreartistico, usuario)
+                                print("Nombre Artistico Agregado")                    
+                            
+                elif(len(nombreartistico) != 0):
+                                         
+                            
+                    if(informacion[0][2] == 'premium'):
+                        print('ADMINISTRADOR')
+                        print('USUARIO PREMIUM')
+                        print(nombreartistico[0][0])
+                        opcion = input(" 1.Buscar\n 2.Registrar Album\n 3.Registrar Track\n 4.Inactivar cancion del catalogo\n 5.Modificar cancion\n 6.Modificar Artista\n 7.Eliminar una cancion\n 8.Eliminar album\n 9.Eliminar artista\n")
+                        
+                        if (opcion == "1"):
+                            menuprincipal()
+                            
+                        elif (opcion == "2"):
+                            nombrealbum = input("Ingresa el nombre del Album a registrar\n")
                             codigoalbum = str((random.randint(3, 100000)))
-                            agregaralbum(cancion, nombreartistico[0][0], codigoalbum)
-                            ingresaralbumcancion(codigocancion, codigoalbum)
-                            print("Cancion Agregada Correctamente")  
+                            agregaralbum(nombrealbum, nombreartistico[0][0],codigoalbum)
+                            print("Album Agregado Correctamente")
+
+                                
+                        elif (opcion == "3"):
+                            cancion = input('Ingresa el nombre de la cancion a registrar\n')
+                            codigocancion = (random.randint(3, 100000))
+                            generos = []
+                            while True:
+                                print("Ingresa el numero del genero o generos a elegir o ingresa '0' para concluir con los generos\n")
+                                for x in range (len(mostrargeneros())):
+                                    print(str(x+1) + ". " + mostrargeneros()[x][0])
+                                generoelegido = int(input())
+                                
+
+                                if(len(generos) != 0 and generoelegido == 0 ):                                
+                                    break
+                                
+                                elif (mostrargeneros()[generoelegido-1][0] not in generos and generoelegido != 0):
+                                    generos.append(mostrargeneros()[generoelegido-1][0])
+                                    print("Genero agregado")
+                                else:
+                                    print("Genero ya habia sido agregado anteriormente")
+                            opcion = input(" 1.Agregar en album existente\n 2.Agregar como sencillo\n ")
+                            if(opcion == "1"):
+                                if(len(seleccionaralbumdeartista(nombreartistico[0][0])) !=0):       
+                                    for x in range (len(seleccionaralbumdeartista(nombreartistico[0][0]))):
+                                        print(str(x+1) + ". " + seleccionaralbumdeartista(nombreartistico[0][0])[x][0] + ", " +seleccionaralbumdeartista(nombreartistico[0][0])[x][2])
+                                        
+                                    albumelegido = int(input("Ingresa el numero del album en el que la agregaras\n"))
+                                    agregarcancion(cancion, codigocancion)
+                                    agregarcanciongenero(codigocancion, generos)
+                                    agregarcancionartista(codigocancion, nombreartistico[0][0])
+                                    ingresaralbumcancion(codigocancion, seleccionaralbumdeartista(nombreartistico[0][0])[albumelegido-1][3])
+                                    print("Cancion Agregada Correctamente")
+                                    
+                                else:
+                                    print("No tienes ningun album creado, primero crea uno o agrega cancion como sencillo")
+                                    
+                            if(opcion == "2"):
+                                agregarcancion(cancion, codigocancion)
+                                agregarcanciongenero(codigocancion, generos)
+                                agregarcancionartista(codigocancion, nombreartistico[0][0])
+                                codigoalbum = str((random.randint(3, 100000)))
+                                agregaralbum(cancion, nombreartistico[0][0], codigoalbum)
+                                ingresaralbumcancion(codigocancion, codigoalbum)
+                                print("Cancion Agregada Correctamente")                
                         
         else:
             print("Contrasena incorrecta")
