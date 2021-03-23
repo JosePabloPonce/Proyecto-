@@ -265,8 +265,10 @@ def menuprincipalPremium():
     record = cursor.fetchall()
     print("Bienvenido "+ str(record[0][0]))
     menu = True
+    bandera = True
+    bandera2 = True
     while menu:
-        opcion = input("Buscar:\n 1.Cancion \n 2.Artista \n 3.Genero \n 4.Album\n 5.Salir\n")
+        opcion = input("Buscar:\n 1.Cancion \n 2.Artista \n 3.Genero \n 4.Album\n 5.Anadir Playlist\n 6.Salir\n")
         if opcion == '1':
             buscar = input("Nombre de la cancion\n")
             busqueda = "select t.nombre_artistico,(select c.cancion from canciones c where c.cancion = %s and c.codigo_cancion = t.codigo_cancion) from tiene_artista_cancion t where t.codigo_cancion in (select c.codigo_cancion from canciones c where c.cancion = %s)"
@@ -359,6 +361,75 @@ def menuprincipalPremium():
             kit.playonyt(str(record[cancion-1]))
             #abrir cancion youtube
         if opcion == '5':
+            while bandera:
+                opcion = input("1.Anadir Playlist \n 2.Ver Playlists \n 3. Salir\n")
+                if opcion == '1':
+                    nombre = input("Ingrese el nombre de la playlist:\n")
+                    codigoplaylist = str((random.randint(3, 100000)))
+                    insertar = "insert into playlists values(%s,%s,%s)"
+                    datos = (nombre, codigoplaylist, usuario)
+                    cursor.execute(insertar, datos)
+                    engine.commit()
+                    
+                if opcion == '2':
+                    verPlaylist = "select nombre from playlists"
+                    cursor.execute(verPlaylist)
+                    record = cursor.fetchall()
+                    for i in range (0,len(record)):
+                        print(str(i+1)+". "+str(record[i][0]))
+                        
+                    artista = int(input("Ingrese la opcion de playlist:\n"))
+                    eleccion = str(record[artista-1][0])
+                    print(eleccion)
+                    query = "select c.cancion from canciones c where c.codigo_cancion in (select t.codigo_cancion from tiene_playlist_cancion t where t.codigo_playlist in (select t2.codigo_playlist from playlists t2 where t2.nombre = %s))"
+                    cursor.execute(query,(eleccion,))
+                    record = cursor.fetchall()
+                    print("Canciones que tiene la playlist:\n")
+                    for i in range (0,len(record)):
+                        print(str(i+1)+". "+str(record[i][0]))
+                        
+                    cancion = int(input ("Ingrese el numero de opcion que desea:\n"))
+                    codigoCancion = "select c.codigo_cancion from canciones c where c.cancion = %s"
+                    cursor.execute(codigoCancion,(record[cancion-1],))
+                    histo = cursor.fetchall()
+                    historial = histo[0][0]
+                    insertarcanciondiaPremium(usuario,historial)
+                    kit.playonyt(str(record[cancion-1]))
+                    
+                    while bandera2:
+                        opcion = input("¿Desea añadir mas canciones?\n 1. Si\n 2. No\n")
+                        if opcion == '1':
+                            buscar = input("Nombre de la cancion\n")
+                            busqueda = "select t.nombre_artistico,(select c.cancion from canciones c where c.cancion = %s and c.codigo_cancion = t.codigo_cancion) from tiene_artista_cancion t where t.codigo_cancion in (select c.codigo_cancion from canciones c where c.cancion = %s)"
+                            cursor.execute(busqueda,(buscar,buscar,))
+                            record = cursor.fetchall()                       
+                            for i in range (0,len(record)):
+                                print(str(i+1)+". "+str(record[i]))
+                            
+                            print(eleccion)
+                            cancion = int(input ("Ingrese el numero de opcion que desea:\n"))
+                            can = str(record[cancion-1][1])
+                            print(can)
+                            codigoCancion = "select c.codigo_cancion from canciones c where c.cancion = %s"
+                            cursor.execute(codigoCancion,(can,))
+                            recordCancion = cursor.fetchall()
+                            codigoPlaylist = "select c.codigo_playlist from playlists c where c.nombre = %s"
+                            cursor.execute(codigoPlaylist,(eleccion,))
+                            recordPlaylist = cursor.fetchall()
+                            insertar = "insert into tiene_playlist_cancion values(%s,%s)"
+                            datos = (recordCancion[0][0],recordPlaylist[0][0])
+                            cursor.execute(insertar, datos)
+                            engine.commit()
+                        if opcion == '2':
+                            bandera2 = False
+                    
+                if opcion == '3':
+                    bandera = False
+                    
+                
+            
+            
+        if opcion == '6':
             print("Adios")
             menu = False
  
