@@ -434,6 +434,155 @@ def menuprincipalPremium():
             menu = False
  
     
+def eliminarcancion():
+
+        cursor = engine.cursor()
+        buscar = input("Ingresa el Nombre del Artista de la Cancion\n")
+        busqueda = "select nombre_artistico from artistas where nombre_artistico = %s"
+        cursor.execute(busqueda,(buscar,))
+        record = cursor.fetchall()
+        
+        for i in range (0,len(record)):
+            print(str(i+1)+". "+str(record[i][0]))
+            
+        artista = int(input("Ingresa el numero del artista correspondiente:\n"))
+        eleccion = str(record[artista-1][0])
+        cancion = "select c.cancion, c.codigo_cancion from canciones c where c.codigo_cancion in (select t.codigo_cancion from tiene_artista_cancion t where t.nombre_artistico = %s)"
+        cursor.execute(cancion,(eleccion,))
+        record = cursor.fetchall()
+        for i in range (0,len(record)):
+            print(str(i+1)+". "+eleccion+" "+str(record[i][0]))
+            
+        cancion = int(input ("Ingrese el numero de cancion que deseas eliminar:\n"))
+        eliminargenero = ("delete from tiene_genero_cancion where codigo_cancion =%s")
+        cursor.execute(eliminargenero, [record[cancion-1][1]])
+        engine.commit()
+        
+        eliminarhistorial = ("delete from historial where codigo_cancion =%s")
+        cursor.execute(eliminarhistorial, [record[cancion-1][1]])
+        engine.commit()
+        
+        eliminaralbum = ("delete from tiene_album_cancion where codigo_cancion =%s")
+        cursor.execute(eliminaralbum, [record[cancion-1][1]])
+        engine.commit()
+        
+        eliminarartista = ("delete from tiene_artista_cancion where codigo_cancion =%s")
+        cursor.execute(eliminarartista, [record[cancion-1][1]])
+        engine.commit()
+        
+        eliminarplaylist = ("delete from tiene_playlist_cancion where codigo_cancion =%s")
+        cursor.execute(eliminarplaylist, [record[cancion-1][1]])
+        engine.commit()
+        
+        eliminarcancion = ("delete from canciones where codigo_cancion =%s")
+        cursor.execute(eliminarcancion, [record[cancion-1][1]])
+        engine.commit()
+        
+
+        print("cancion eliminada")
+
+def eliminaralbum():
+        cursor = engine.cursor()
+        buscar = input("Nombre del Album\n")
+        busqueda = "select album, codigo_album from albumes where album = %s"
+        cursor.execute(busqueda,(buscar,))
+        record = cursor.fetchall()
+        for i in range (0,len(record)):
+            print(str(i+1)+". "+str(record[i][0]))
+            
+        artista = int(input("Ingrese la opcion de album:\n"))
+        eleccion = str(record[artista-1][1])
+
+        cancion = "select * from tiene_album_cancion where codigo_album =%s"
+        cursor.execute(cancion,(eleccion,))
+        record = cursor.fetchall()
+        for i in range (0,len(record)):            
+            eliminargenero = ("delete from tiene_genero_cancion where codigo_cancion =%s")
+            cursor.execute(eliminargenero, [record[i][0]])
+            engine.commit()
+            
+            eliminarhistorial = ("delete from historial where codigo_cancion =%s")
+            cursor.execute(eliminarhistorial, [record[i][0]])
+            engine.commit()
+            
+            eliminaralbum = ("delete from tiene_album_cancion where codigo_cancion =%s")
+            cursor.execute(eliminaralbum, [record[i][0]])
+            engine.commit()
+            
+            eliminarartista = ("delete from tiene_artista_cancion where codigo_cancion =%s")
+            cursor.execute(eliminarartista, [record[i][0]])
+            engine.commit()
+            
+            eliminarplaylist = ("delete from tiene_playlist_cancion where codigo_cancion =%s")
+            cursor.execute(eliminarplaylist, [record[i][0]])
+            engine.commit()
+            
+            eliminarcancion = ("delete from canciones where codigo_cancion =%s")
+            cursor.execute(eliminarcancion, [record[i][0]])
+            engine.commit()
+        
+        eliminarnombrealbum = ("delete from albumes where codigo_album =%s")
+        cursor.execute(eliminarnombrealbum, [eleccion])
+        engine.commit()
+            
+        print("Album y sus canciones eliminadas")
+            
+            
+def eliminarartista():
+        cursor = engine.cursor()
+        buscar = input("Ingresa el Nombre del Artista a eliminar\n")
+        busqueda = "select nombre_artistico from artistas where nombre_artistico = %s"
+        cursor.execute(busqueda,(buscar,))
+        record = cursor.fetchall()
+        
+        for i in range (0,len(record)):
+            print(str(i+1)+". "+str(record[i][0]))
+            
+        artista = int(input("Ingresa el numero del artista correspondiente:\n"))
+        eleccion = str(record[artista-1][0])
+
+        busqueda = "select codigo_album from albumes where nombre_artistico = %s"
+        cursor.execute(busqueda,(eleccion,))
+        record = cursor.fetchall()
+        for i in range (0,len(record)):            
+            cancion = "select * from tiene_album_cancion where codigo_album =%s"
+            cursor.execute(cancion,(record[i][0],))
+            record2 = cursor.fetchall()
+            for i in range (0,len(record2)):            
+                eliminargenero = ("delete from tiene_genero_cancion where codigo_cancion =%s")
+                cursor.execute(eliminargenero, [record2[i][0]])
+                engine.commit()
+                
+                eliminarhistorial = ("delete from historial where codigo_cancion =%s")
+                cursor.execute(eliminarhistorial, [record2[i][0]])
+                engine.commit()
+                
+                eliminaralbum = ("delete from tiene_album_cancion where codigo_cancion =%s")
+                cursor.execute(eliminaralbum, [record2[i][0]])
+                engine.commit()
+                
+                eliminarartista = ("delete from tiene_artista_cancion where codigo_cancion =%s")
+                cursor.execute(eliminarartista, [record2[i][0]])
+                engine.commit()
+                
+                eliminarplaylist = ("delete from tiene_playlist_cancion where codigo_cancion =%s")
+                cursor.execute(eliminarplaylist, [record2[i][0]])
+                engine.commit()
+                
+                eliminarcancion = ("delete from canciones where codigo_cancion =%s")
+                cursor.execute(eliminarcancion, [record2[i][0]])
+                engine.commit()
+            
+            eliminarnombrealbum = ("delete from albumes where codigo_album =%s")
+            cursor.execute(eliminarnombrealbum, [record[i][0]])
+            engine.commit()
+        
+        eliminarnombreartista = ("delete from artistas where nombre_artistico =%s")
+        cursor.execute(eliminarnombreartista, [eleccion])
+        engine.commit()
+        
+        print("Artista eliminado con albumes y canciones")
+
 
 
 opcion = input(" 1. Sign Up\n 2. Login\n")
@@ -639,7 +788,18 @@ if opcion =='2':
                                 
                             elif(len(chequearartista(nombreartistico)) == 0):
                                 agregarartista(nombreartistico, usuario)
-                                print("Nombre Artistico Agregado")                    
+                                print("Nombre Artistico Agregado")
+                                
+                            
+                        elif(opcion =="6"):
+                            eliminarcancion()
+                            
+                        elif(opcion =="7"):
+                            eliminaralbum()
+                            
+                        elif(opcion =="8"):
+                            eliminarartista()
+                            
                             
                 elif(len(nombreartistico) != 0):
                                          
@@ -702,7 +862,18 @@ if opcion =='2':
                                 codigoalbum = str((random.randint(3, 100000)))
                                 agregaralbum(cancion, nombreartistico[0][0], codigoalbum)
                                 ingresaralbumcancion(codigocancion, codigoalbum)
-                                print("Cancion Agregada Correctamente")                
+                                print("Cancion Agregada Correctamente")
+                        
+                                
+                        elif(opcion =="7"):
+                            eliminarcancion()
+                            
+                        elif(opcion =="8"):
+                            eliminaralbum()
+                            
+                        elif(opcion =="9"):
+                            eliminarartista()
+                                                    
                         
         else:
             print("Contrasena incorrecta")
