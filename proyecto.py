@@ -426,8 +426,7 @@ def menuprincipalPremium():
                 if opcion == '3':
                     bandera = False
                     
-                
-            
+                     
             
         if opcion == '6':
             print("Adios")
@@ -583,7 +582,51 @@ def eliminarartista():
         
         print("Artista eliminado con albumes y canciones")
 
-
+def albumesmasrecientesultimasemana():
+    cursor = engine.cursor()
+    seleccionar ="select a.album, a.nombre_artistico from albumes a where a.fecha_agregado between (now() -'1 week'::interval) and   now()"
+    cursor.execute(seleccionar)
+    record = cursor.fetchall()
+    for i in range (0,len(record)):
+        print(str(i+1)+". "+str(record[i][0])+", " + str(record[i][1]))
+        
+def aumentopopularidad3meses():
+    cursor = engine.cursor()
+    seleccionar ="select a2.nombre_artistico, (select count(h2.codigo_cancion) as reproducciones from historial h2 where h2.fecha_escuchada between (now() - '3 month'::interval) and now() and h2.codigo_cancion in(select tac.codigo_cancion  from tiene_artista_cancion tac where tac.nombre_artistico= a2.nombre_artistico))  from artistas a2  order by reproducciones desc limit 10"
+    cursor.execute(seleccionar)
+    record = cursor.fetchall()
+    print("Top 10 Artistas con mayor cantidad de reproducciones en los ultimos 3 meses")
+    for i in range (0,len(record)):
+        print(str(i+1)+". "+str(record[i][0])+", " + str(record[i][1]) + " reproducciones")
+        
+def artistasmayorproduccion():
+    cursor = engine.cursor()
+    seleccionar ="select  a.nombre_artistico, (select count(tac.codigo_cancion) as cantidad_canciones from tiene_artista_cancion tac where tac.nombre_artistico=a.nombre_artistico) from artistas a  order by cantidad_canciones desc limit 10"
+    cursor.execute(seleccionar)
+    record = cursor.fetchall()
+    print("Top 10 Artistas con mayor cantidad de canciones en la plataforma")
+    for i in range (0,len(record)):
+        print(str(i+1)+". "+str(record[i][0])+", " + str(record[i][1]) + " canciones")
+        
+def generosmaspopulares():
+    cursor = engine.cursor()
+    seleccionar ="select g.genero, (select count(h2.codigo_cancion) as reproducciones from historial h2 where h2.fecha_escuchada between (now() - '1 month'::interval) and now() and h2.codigo_cancion in (select tgc.codigo_cancion from tiene_genero_cancion tgc where tgc.genero=g.genero)) from generos g order by reproducciones desc limit 5"
+    cursor.execute(seleccionar)
+    record = cursor.fetchall()
+    print("Top 5 Generos mas escuchados del ultimo mes")
+    for i in range (0,len(record)):
+        print(str(i+1)+". "+str(record[i][0])+", " + str(record[i][1]) + " reproducciones")
+        
+def usuariosmasactivos():
+    cursor = engine.cursor()
+    seleccionar ="select u.usuario, (select count(h2.usuario) as cantidad_canciones_escuchadas from historial h2 where h2.usuario= u.usuario and h2.fecha_escuchada  between (now() - '1 month'::interval) and now()) from usuarios u order by cantidad_canciones_escuchadas desc limit 5"
+    cursor.execute(seleccionar)
+    record = cursor.fetchall()
+    print("Top 5 Usuarios con mas canciones escuchadas del ultimo mes")
+    for i in range (0,len(record)):
+        print(str(i+1)+". "+str(record[i][0])+", " + str(record[i][1]) + " canciones escuchadas")
+        
+    
 
 opcion = input(" 1. Sign Up\n 2. Login\n")
 if opcion == '1':
@@ -602,7 +645,9 @@ if opcion == '1':
     else:
         print("usuario ya existe")
     
-        
+
+    
+
 if opcion =='2':
     usuario=input('Ingrese su usuario\n ')
     informacion = comprobariniciosesion(usuario)
@@ -777,7 +822,7 @@ if opcion =='2':
                     if(informacion[0][2] == 'premium'):
                         print('ADMINISTRADOR')
                         print('USUARIO PREMIUM')            
-                        opcion = input(" 1.Buscar\n 2.Darse de alta como Artista o Manager\n 3.Inactivar cancion del catalogo\n 4.Modificar cancion\n 5.Modificar Artista\n 6.Eliminar una cancion\n 7.Eliminar album\n 8.Eliminar artista\n")
+                        opcion = input(" 1.Buscar\n 2.Darse de alta como Artista o Manager\n 3.Inactivar cancion del catalogo\n 4.Modificar cancion\n 5.Modificar Artista\n 6.Eliminar una cancion\n 7.Eliminar album\n 8.Eliminar artista\n 9.Reporteria\n")
                         if opcion == "1":
                             menuprincipalPremium()
                         
@@ -800,6 +845,26 @@ if opcion =='2':
                         elif(opcion =="8"):
                             eliminarartista()
                             
+                        elif(opcion == "9"):
+                            opcion = input(" 1.Albumes mas recientes de la ultima semana\n 2.Artistas con popularidad creciente en los ultimos tres meses
+\n 3.Cantidad de nuevas suscripciones mensuales durante los ultimos seis meses\n 4.Artistas con mayor producción musical\n 5.Generos mas populares
+\n 6.Usuarios mas activos en la plataforma\n")
+                            if(opcion == "1"):
+                                albumesmasrecientesultimasemana()
+                                
+                            elif(opcion =="2"):
+                                aumentopopularidad3meses()
+                                
+                            elif(opcion =="4"):
+                                artistasmayorproduccion()
+                                
+                            elif(opcion == "5"):
+                                generosmaspopulares()
+                                
+                            elif(opcion =="6"):
+                                usuariosmasactivos()
+                                
+                                                  
                             
                 elif(len(nombreartistico) != 0):
                                          
@@ -808,7 +873,7 @@ if opcion =='2':
                         print('ADMINISTRADOR')
                         print('USUARIO PREMIUM')
                         print(nombreartistico[0][0])
-                        opcion = input(" 1.Buscar\n 2.Registrar Album\n 3.Registrar Track\n 4.Inactivar cancion del catalogo\n 5.Modificar cancion\n 6.Modificar Artista\n 7.Eliminar una cancion\n 8.Eliminar album\n 9.Eliminar artista\n")
+                        opcion = input(" 1.Buscar\n 2.Registrar Album\n 3.Registrar Track\n 4.Inactivar cancion del catalogo\n 5.Modificar cancion\n 6.Modificar Artista\n 7.Eliminar una cancion\n 8.Eliminar album\n 9.Eliminar artista\n 10.Reporteria\n")
                         
                         if (opcion == "1"):
                             menuprincipalPremium()
@@ -873,7 +938,26 @@ if opcion =='2':
                             
                         elif(opcion =="9"):
                             eliminarartista()
-                                                    
+                            
+                        elif(opcion == "10"):
+                            opcion = input(" 1.Albumes mas recientes de la ultima semana\n 2.Artistas con popularidad creciente en los ultimos tres meses
+\n 3.Cantidad de nuevas suscripciones mensuales durante los ultimos seis meses\n 4.Artistas con mayor producción musical\n 5.Generos mas populares
+\n 6.Usuarios mas activos en la plataforma\n")
+                            if(opcion == "1"):
+                                albumesmasrecientesultimasemana()
+                                
+                            elif(opcion =="2"):
+                                aumentopopularidad3meses()
+                                
+                            elif(opcion =="4"):
+                                artistasmayorproduccion()
+                                
+                            elif(opcion == "5"):
+                                generosmaspopulares()
+                                
+                            elif(opcion =="6"):
+                                usuariosmasactivos()
+                                                                                    
                         
         else:
             print("Contrasena incorrecta")
