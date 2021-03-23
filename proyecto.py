@@ -114,31 +114,39 @@ def ingresaralbumcancion(codigocancion, codigoalbum):
         cursor.execute(insertar, datos)
         engine.commit()    
 
-def insertarcancionaldia(usuario):
+def insertarcanciondiaNoPremium(usuario,codigo_cancion):
     cursor = engine.cursor()
-    cancionAlDia = "select canciones_al_dia from usuarios where usuario = %s"
-    cursor.execute(cancionAlDia, (usuario,))
-    record = cursor.fetchall()
-    if record[0][0] == 0 or None:
-        insertar =  "update usuarios set canciones_al_dia = 1 WHERE usuario = (%s)"
-        cursor.execute(insertar, [usuario])
-        engine.commit()
-        return True
-    if record[0][0] == 1:
-        insertar =  " update usuarios set canciones_al_dia =2 WHERE usuario = (%s)"
-        cursor.execute(insertar, [usuario])
-        engine.commit()
-        return True
-    if record[0][0] == 2:
-        insertar =  " update usuarios set canciones_al_dia =3 WHERE usuario = (%s)"
-        cursor.execute(insertar, [usuario])
-        engine.commit()
-        return True
-    if record[0][0] == 3:
+    con = "select count(h.codigo_escucha) from historial h where h.usuario = %s"
+    cursor.execute(con,(usuario,))
+    conteo = cursor.fetchall()
+    print(conteo[0][0])
+    if conteo[0][0] == 3:
         return False
- 
+    else:
+        today =  date.today()   
+        codigoescucha = str((random.randint(3, 100000)))
+        insertar = "insert into historial values (%s,%s,%s,%s)"
+        #cancionAlDia = "update historial set usuario = (%s), fecha_escuchada = (%s), codigo_escucha =(%s), codigo_cancion =(%s)"
+        datos = (today,codigoescucha,codigo_cancion,usuario)
+        cursor.execute(insertar,datos)
+        engine.commit()
+        return True
+        
+def insertarcanciondiaPremium(usuario,codigo_cancion):
+    cursor = engine.cursor()
+    today =  date.today()   
+    codigoescucha = str((random.randint(3, 100000)))
+    insertar = "insert into historial values (%s,%s,%s,%s)"
+    #cancionAlDia = "update historial set usuario = (%s), fecha_escuchada = (%s), codigo_escucha =(%s), codigo_cancion =(%s)"
+    datos = (today,codigoescucha,codigo_cancion,usuario)
+    cursor.execute(insertar,datos)
+    engine.commit()
+        
+           
+
     
-def menuprincipal():
+    
+def menuprincipalNoPremium():
     cursor = engine.cursor()
     saludo = "select nombre from usuarios where usuario = %s"
     cursor.execute(saludo,(usuario,))
@@ -149,14 +157,18 @@ def menuprincipal():
         opcion = input("Buscar:\n 1.Cancion \n 2.Artista \n 3.Genero \n 4.Album\n 5.Salir\n")
         if opcion == '1':
             buscar = input("Nombre de la cancion\n")
-            busqueda = "select t.nombre_artistico,(select c.cancion from canciones c where c.cancion = %s and c.codigo_cancion = t.codigo_cancion) from tiene_artista_cancion t"
-            cursor.execute(busqueda,(buscar,))
+            busqueda = "select t.nombre_artistico,(select c.cancion from canciones c where c.cancion = %s and c.codigo_cancion = t.codigo_cancion) from tiene_artista_cancion t where t.codigo_cancion in (select c.codigo_cancion from canciones c where c.cancion = %s)"
+            cursor.execute(busqueda,(buscar,buscar,))
             record = cursor.fetchall()                       
             for i in range (0,len(record)):
                 print(str(i+1)+". "+str(record[i]))
             
             cancion = int(input ("Ingrese el numero de opcion que desea:\n"))
-            if(insertarcancionaldia(usuario)):
+            codigoCancion = "select c.codigo_cancion from canciones c where c.cancion = %s"
+            cursor.execute(codigoCancion,(buscar,))
+            histo = cursor.fetchall()
+            historial = histo[0][0]
+            if(insertarcanciondiaNoPremium(usuario,historial)):
                 kit.playonyt(str(record[cancion-1]))
             else:
                 print("Ya no puedes reproducir mas canciones")
@@ -179,7 +191,11 @@ def menuprincipal():
                 print(str(i+1)+". "+eleccion+" "+str(record[i][0]))
                 
             cancion = int(input ("Ingrese el numero de opcion que desea:\n"))
-            if(insertarcancionaldia(usuario)):
+            codigoCancion = "select c.codigo_cancion from canciones c where c.codigo_cancion in(select t.codigo_cancion from tiene_artista_cancion t where t.nombre_artistico = %s)"
+            cursor.execute(codigoCancion,(buscar,))
+            histo = cursor.fetchall()
+            historial = histo[0][0]
+            if(insertarcanciondiaNoPremium(usuario,historial)):
                 kit.playonyt(str(record[cancion-1]))
             else:
                 print("Ya no puedes reproducir mas canciones")
@@ -201,7 +217,11 @@ def menuprincipal():
                 print(str(i+1)+". "+str(record[i]))
                 
             cancion = int(input ("Ingrese el numero de opcion que desea:\n"))
-            if(insertarcancionaldia(usuario)):
+            codigoCancion = "select c.codigo_cancion from canciones c where c.codigo_cancion in (select t.codigo_cancion from tiene_genero_cancion t where t.genero = %s)"
+            cursor.execute(codigoCancion,(buscar,))
+            histo = cursor.fetchall()
+            historial = histo[0][0]
+            if(insertarcanciondiaNoPremium(usuario,historial)):
                 kit.playonyt(str(record[cancion-1]))
             else:
                 print("Ya no puedes reproducir mas canciones")
@@ -224,7 +244,11 @@ def menuprincipal():
                 print(str(i+1)+". "+str(record[i]))
                 
             cancion = int(input ("Ingrese el numero de opcion que desea:\n"))
-            if(insertarcancionaldia(usuario)):
+            codigoCancion = "select c.codigo_cancion from canciones c where c.codigo_cancion in (select t.codigo_cancion from tiene_album_cancion t where t.codigo_album in (select t2.codigo_album from albumes t2 where t2.album = %s)) "
+            cursor.execute(codigoCancion,(buscar,))
+            histo = cursor.fetchall()
+            historial = histo[0][0]
+            if(insertarcanciondiaNoPremium(usuario,historial)):
                 kit.playonyt(str(record[cancion-1]))
             else:
                 print("Ya no puedes reproducir mas canciones")
@@ -232,6 +256,114 @@ def menuprincipal():
         if opcion == '5':
             print("Adios")
             menu = False
+            
+            
+def menuprincipalPremium():
+    cursor = engine.cursor()
+    saludo = "select nombre from usuarios where usuario = %s"
+    cursor.execute(saludo,(usuario,))
+    record = cursor.fetchall()
+    print("Bienvenido "+ str(record[0][0]))
+    menu = True
+    while menu:
+        opcion = input("Buscar:\n 1.Cancion \n 2.Artista \n 3.Genero \n 4.Album\n 5.Salir\n")
+        if opcion == '1':
+            buscar = input("Nombre de la cancion\n")
+            busqueda = "select t.nombre_artistico,(select c.cancion from canciones c where c.cancion = %s and c.codigo_cancion = t.codigo_cancion) from tiene_artista_cancion t where t.codigo_cancion in (select c.codigo_cancion from canciones c where c.cancion = %s)"
+            cursor.execute(busqueda,(buscar,buscar,))
+            record = cursor.fetchall()                       
+            for i in range (0,len(record)):
+                print(str(i+1)+". "+str(record[i]))
+            
+            cancion = int(input ("Ingrese el numero de opcion que desea:\n"))
+            codigoCancion = "select c.codigo_cancion from canciones c where c.cancion = %s"
+            cursor.execute(codigoCancion,(buscar,))
+            histo = cursor.fetchall()
+            historial = histo[0][0]
+            insertarcanciondiaPremium(usuario,historial)
+            kit.playonyt(str(record[cancion-1]))
+            
+            #abrir cancion youtube
+        if opcion == '2':
+            buscar = input("Nombre del Artista\n")
+            busqueda = "select nombre_artistico from artistas where nombre_artistico = %s"
+            cursor.execute(busqueda,(buscar,))
+            record = cursor.fetchall()
+            
+            for i in range (0,len(record)):
+                print(str(i+1)+". "+str(record[i][0]))
+                
+            artista = int(input("Ingrese la opcion de artista:\n"))
+            eleccion = str(record[artista-1][0])
+            cancion = "select c.cancion from canciones c where c.codigo_cancion in (select t.codigo_cancion from tiene_artista_cancion t where t.nombre_artistico = %s)"
+            cursor.execute(cancion,(eleccion,))
+            record = cursor.fetchall()
+            for i in range (0,len(record)):
+                print(str(i+1)+". "+eleccion+" "+str(record[i][0]))
+                
+            cancion = int(input ("Ingrese el numero de opcion que desea:\n"))
+            codigoCancion = "select c.codigo_cancion from canciones c where c.codigo_cancion in(select t.codigo_cancion from tiene_artista_cancion t where t.nombre_artistico = %s)"
+            cursor.execute(codigoCancion,(buscar,))
+            histo = cursor.fetchall()
+            historial = histo[0][0]
+            insertarcanciondiaPremium(usuario,historial)
+            kit.playonyt(str(record[cancion-1]))
+            #abrir cancion youtube
+        if opcion == '3':
+            buscar = input("Nombre del Genero\n")
+            busqueda = "select genero from generos where genero = %s"
+            cursor.execute(busqueda,(buscar,))
+            record = cursor.fetchall()
+            for i in range (0,len(record)):
+                print(str(i+1)+". "+str(record[i][0]))
+                
+            artista = int(input("Ingrese la opcion de genero:\n"))
+            eleccion = str(record[artista-1][0])
+            cancion = "select t.nombre_artistico,(select c.cancion from canciones c where c.codigo_cancion in (select t2.codigo_cancion from tiene_genero_cancion t2 where t2.genero = %s)limit 1) from tiene_artista_cancion t"
+            cursor.execute(cancion,(eleccion,))
+            record = cursor.fetchall()
+            for i in range (0,len(record)):
+                print(str(i+1)+". "+str(record[i]))
+                
+            cancion = int(input ("Ingrese el numero de opcion que desea:\n"))
+            codigoCancion = "select c.codigo_cancion from canciones c where c.codigo_cancion in (select t.codigo_cancion from tiene_genero_cancion t where t.genero = %s)"
+            cursor.execute(codigoCancion,(buscar,))
+            histo = cursor.fetchall()
+            historial = histo[0][0]
+            insertarcanciondiaPremium(usuario,historial)
+            kit.playonyt(str(record[cancion-1]))
+            #abrir cancion youtube
+        if opcion == '4':
+            buscar = input("Nombre del Album\n")
+            busqueda = "select album from albumes where album = %s"
+            cursor.execute(busqueda,(buscar,))
+            record = cursor.fetchall()
+            for i in range (0,len(record)):
+                print(str(i+1)+". "+str(record[i][0]))
+                
+            artista = int(input("Ingrese la opcion de album:\n"))
+            eleccion = str(record[artista-1][0])
+            print(eleccion)
+            cancion = "select t.nombre_artistico,(select c.cancion from canciones c where c.codigo_cancion in (select t2.codigo_cancion from tiene_album_cancion t2 where t2.codigo_album in (select t3.codigo_album from albumes t3 where t3.album = %s))) from tiene_artista_cancion t where t.codigo_cancion in (select c.codigo_cancion from canciones c where c.codigo_cancion in (select t2.codigo_cancion from tiene_album_cancion t2 where t2.codigo_album in (select t3.codigo_album from albumes t3 where t3.album = %s)))"
+            cursor.execute(cancion,(eleccion,eleccion,))
+            record = cursor.fetchall()
+            for i in range (0,len(record)):
+                print(str(i+1)+". "+str(record[i]))
+                
+            cancion = int(input ("Ingrese el numero de opcion que desea:\n"))
+            codigoCancion = "select c.codigo_cancion from canciones c where c.codigo_cancion in (select t.codigo_cancion from tiene_album_cancion t where t.codigo_album in (select t2.codigo_album from albumes t2 where t2.album = %s))"
+            cursor.execute(codigoCancion,(buscar,))
+            histo = cursor.fetchall()
+            historial = histo[0][0]
+            insertarcanciondiaPremium(usuario,historial)
+            kit.playonyt(str(record[cancion-1]))
+            #abrir cancion youtube
+        if opcion == '5':
+            print("Adios")
+            menu = False
+ 
+    
+
 
 opcion = input(" 1. Sign Up\n 2. Login\n")
 if opcion == '1':
@@ -266,7 +398,7 @@ if opcion =='2':
                         opcion = input(" 1.Buscar\n 2.Actualizar Suscripcion\n, 3.Darse de alta como Artista o Manager\n")
             
                         if opcion == "1":
-                            menuprincipal()
+                            menuprincipalNoPremium()
                             
                         elif(opcion == "2"):
                             actualizarSuscripcion(usuario)
@@ -286,7 +418,7 @@ if opcion =='2':
                         print('USUARIO PREMIUM')            
                         opcion = input(" 1.Buscar\n 2.Darse de alta como Artista o Manager\n")
                         if opcion == "1":
-                            menuprincipal()
+                            menuprincipalPremium()
                         
                         elif(opcion =="2"):
                             nombreartistico = input("Ingresa tu nombre Artistico\n")
@@ -303,7 +435,7 @@ if opcion =='2':
                         print(nombreartistico[0][0])
                         opcion = input(" 1.Buscar\n 2.Actualizar Suscripcion\n 3.Registrar Album\n 4.Registrar Track\n")
                         if opcion == "1":
-                            menuprincipal()
+                            menuprincipalNoPremium()
                             
                         elif(opcion == "2"):
                             actualizarSuscripcion(usuario)
@@ -367,7 +499,7 @@ if opcion =='2':
                         opcion = input(" 1.Buscar\n 2.Registrar Album\n 3.Registrar Track\n")
                         
                         if (opcion == "1"):
-                            menuprincipal()
+                            menuprincipalPremium()
                             
                         elif (opcion == "2"):
                             nombrealbum = input("Ingresa el nombre del Album a registrar\n")
@@ -427,7 +559,7 @@ if opcion =='2':
                         print('USUARIO PREMIUM')            
                         opcion = input(" 1.Buscar\n 2.Darse de alta como Artista o Manager\n 3.Inactivar cancion del catalogo\n 4.Modificar cancion\n 5.Modificar Artista\n 6.Eliminar una cancion\n 7.Eliminar album\n 8.Eliminar artista\n")
                         if opcion == "1":
-                            menuprincipal()
+                            menuprincipalPremium()
                         
                         elif(opcion =="2"):
                             nombreartistico = input("Ingresa tu nombre Artistico\n")
@@ -448,7 +580,7 @@ if opcion =='2':
                         opcion = input(" 1.Buscar\n 2.Registrar Album\n 3.Registrar Track\n 4.Inactivar cancion del catalogo\n 5.Modificar cancion\n 6.Modificar Artista\n 7.Eliminar una cancion\n 8.Eliminar album\n 9.Eliminar artista\n")
                         
                         if (opcion == "1"):
-                            menuprincipal()
+                            menuprincipalPremium()
                             
                         elif (opcion == "2"):
                             nombrealbum = input("Ingresa el nombre del Album a registrar\n")
