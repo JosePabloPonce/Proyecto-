@@ -84,8 +84,8 @@ def mostrargeneros():
 def agregarcancion(cancion, codigo):
     today =  date.today()
     cursor = engine.cursor()
-    insertar =  " INSERT INTO canciones VALUES (%s,%s,%s,%s,%s )"
-    datos = (cancion, codigo, 0, today, "activa" )
+    insertar =  " INSERT INTO canciones VALUES (%s,%s,%s,%s )"
+    datos = (cancion, codigo, today, "activa" )
     cursor.execute(insertar, datos)
     engine.commit()
     
@@ -1064,9 +1064,9 @@ while banderaTotal:
                                                             agregaralbum(cancion, nombreartistico[0][0], codigoalbum)
                                                             ingresaralbumcancion(codigocancion, codigoalbum)
                                                             print("Cancion Agregada Correctamente")
-                                                            codigoalbum = False
+                                                            banderaAlbum = False
                                                         else:
-                                                            codigoalbum = True
+                                                            banderaAlbum = True
                                         else:
                                             banderaCancion = True
                                     elif opcion == "4":
@@ -1485,5 +1485,4 @@ while banderaTotal:
     if opcionTotal == "3":
         banderaTotal = False
         print("Vuelve pronto")
-
                                    
