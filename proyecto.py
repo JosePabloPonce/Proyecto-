@@ -182,8 +182,9 @@ def menuprincipalNoPremium():
             banderaCancion = True
             while banderaCancion:
                 buscar = input("Nombre de la cancion\n")
-                busqueda = "select t.nombre_artistico,(select c.cancion from canciones c where c.cancion = %s and c.codigo_cancion = t.codigo_cancion and c.estado = 'activa') from tiene_artista_cancion t intersect select tac.nombre_artistico, (select c2.cancion  from canciones c2 where c2.codigo_cancion=tac.codigo_cancion and c2.estado ='activa') as canciones from tiene_artista_cancion tac where tac.codigo_cancion in(select c.codigo_cancion from canciones c where c.estado = 'activa')"
-                cursor.execute(busqueda,(buscar,))
+                busqueda = "select t.nombre_artistico,(select c.cancion from canciones c where c.cancion ilike %s and c.codigo_cancion = t.codigo_cancion and c.estado = 'activa') from tiene_artista_cancion t intersect select tac.nombre_artistico, (select c2.cancion  from canciones c2 where c2.codigo_cancion=tac.codigo_cancion and c2.estado ='activa') as canciones from tiene_artista_cancion tac where tac.codigo_cancion in(select c.codigo_cancion from canciones c where c.estado = 'activa')"
+                formatear = '%{}%'.format(buscar)
+                cursor.execute(busqueda,(formatear,))
                 record = cursor.fetchall()
                 if len(record) == 0:
                     print("No se encuentra la cancion :( ingresa otra\n")
@@ -196,7 +197,7 @@ def menuprincipalNoPremium():
                     
                     cancion = int(input ("Ingrese el numero de opcion que desea:\n"))
                     codigoCancion = "select c.codigo_cancion from canciones c where c.estado = 'activa' and c.cancion = %s"
-                    cursor.execute(codigoCancion,(buscar,))
+                    cursor.execute(codigoCancion,(record[cancion-1][1],))
                     histo = cursor.fetchall()
                     historial = histo[0][0]
                     if(insertarcanciondiaNoPremium(usuario,historial)):
@@ -210,8 +211,9 @@ def menuprincipalNoPremium():
             banderaArtista = True
             while banderaArtista:
                 buscar = input("Nombre del Artista\n")
-                busqueda = "select nombre_artistico from artistas where nombre_artistico = %s"
-                cursor.execute(busqueda,(buscar,))
+                busqueda = "select nombre_artistico from artistas where nombre_artistico ilike %s"
+                formatear = '%{}%'.format(buscar)
+                cursor.execute(busqueda,(formatear,))
                 record = cursor.fetchall()
                 if len(record) == 0:
                     print("No se encuentra el artista :( ingresa otro\n")
@@ -238,7 +240,7 @@ def menuprincipalNoPremium():
                         
                         cancion = int(input ("Ingrese el numero de opcion que desea:\n"))
                         codigoCancion = "select c.codigo_cancion from canciones c where c.estado = 'activa' and c.codigo_cancion in(select t.codigo_cancion from tiene_artista_cancion t where t.nombre_artistico = %s)"
-                        cursor.execute(codigoCancion,(buscar,))
+                        cursor.execute(codigoCancion,(eleccion,))
                         histo = cursor.fetchall()
                         historial = histo[0][0]
                         if(insertarcanciondiaNoPremium(usuario,historial)):
@@ -287,8 +289,9 @@ def menuprincipalNoPremium():
             banderaAlbum = True
             while banderaAlbum:
                 buscar = input("Nombre del Album\n")
-                busqueda = "select nombre_artistico, album from albumes where album = %s"
-                cursor.execute(busqueda,(buscar,))
+                busqueda = "select nombre_artistico, album from albumes where album ilike %s"
+                formatear = '%{}%'.format(buscar)
+                cursor.execute(busqueda,(formatear,))
                 record = cursor.fetchall()
                 if len(record)==0:
                     print("No se encuentra el album :( ingresa otro\n")
@@ -316,7 +319,7 @@ def menuprincipalNoPremium():
                             
                         cancion = int(input ("Ingrese el numero de opcion que desea:\n"))
                         codigoCancion = "select c.codigo_cancion from canciones c where c.estado = 'activa' and c.codigo_cancion in (select t.codigo_cancion from tiene_album_cancion t where t.codigo_album in (select t2.codigo_album from albumes t2 where t2.album = %s)) "
-                        cursor.execute(codigoCancion,(buscar,))
+                        cursor.execute(codigoCancion,(eleccion,))
                         histo = cursor.fetchall()
                         historial = histo[0][0]
                         if(insertarcanciondiaNoPremium(usuario,historial)):
@@ -344,8 +347,9 @@ def menuprincipalPremium():
             banderaCancion = True
             while banderaCancion:
                 buscar = input("Nombre de la cancion\n")
-                busqueda = "select t.nombre_artistico,(select c.cancion from canciones c where c.cancion = %s and c.codigo_cancion = t.codigo_cancion and c.estado = 'activa') from tiene_artista_cancion t intersect select tac.nombre_artistico, (select c2.cancion  from canciones c2 where c2.codigo_cancion=tac.codigo_cancion and c2.estado ='activa') as canciones from tiene_artista_cancion tac where tac.codigo_cancion in(select c.codigo_cancion from canciones c where c.estado = 'activa')"
-                cursor.execute(busqueda,(buscar,))
+                busqueda = "select t.nombre_artistico,(select c.cancion from canciones c where c.cancion ilike %s and c.codigo_cancion = t.codigo_cancion and c.estado = 'activa') from tiene_artista_cancion t intersect select tac.nombre_artistico, (select c2.cancion  from canciones c2 where c2.codigo_cancion=tac.codigo_cancion and c2.estado ='activa') as canciones from tiene_artista_cancion tac where tac.codigo_cancion in(select c.codigo_cancion from canciones c where c.estado = 'activa')"
+                formatear = '%{}%'.format(buscar)
+                cursor.execute(busqueda,(formatear,))
                 record = cursor.fetchall()
                 if len(record) == 0:
                     print("No se encuentra la cancion :( ingresa otra\n")
@@ -359,7 +363,7 @@ def menuprincipalPremium():
        
                     cancion = int(input ("Ingrese el numero de opcion que desea:\n"))
                     codigoCancion = "select c.codigo_cancion from canciones c where c.estado = 'activa' and c.cancion = %s"
-                    cursor.execute(codigoCancion,(buscar,))
+                    cursor.execute(codigoCancion,(record[cancion-1][1],))
                     histo = cursor.fetchall()
                     historial = histo[0][0]
                     insertarcanciondiaPremium(usuario,historial)
@@ -371,8 +375,9 @@ def menuprincipalPremium():
             banderaArtista = True
             while banderaArtista:
                 buscar = input("Nombre del Artista\n")
-                busqueda = "select nombre_artistico from artistas where nombre_artistico = %s"
-                cursor.execute(busqueda,(buscar,))
+                busqueda = "select nombre_artistico from artistas where nombre_artistico ilike %s"
+                formatear = '%{}%'.format(buscar)
+                cursor.execute(busqueda,(formatear,))
                 record = cursor.fetchall()
                 if len(record) == 0:
                     print("No se encuentra el artista :( ingresa otro")
@@ -401,7 +406,7 @@ def menuprincipalPremium():
                         
                         cancion = int(input ("Ingrese el numero de opcion que desea:\n"))
                         codigoCancion = "select c.codigo_cancion from canciones c where c.estado = 'activa' and c.codigo_cancion in(select t.codigo_cancion from tiene_artista_cancion t where t.nombre_artistico = %s)"
-                        cursor.execute(codigoCancion,(buscar,))
+                        cursor.execute(codigoCancion,(eleccion,))
                         histo = cursor.fetchall()
                         historial = histo[0][0]
                         insertarcanciondiaPremium(usuario,historial)
@@ -446,8 +451,9 @@ def menuprincipalPremium():
             banderaAlbum = True
             while banderaAlbum:
                 buscar = input("Nombre del Album\n")
-                busqueda = "select nombre_artistico, album from albumes where album = %s"
-                cursor.execute(busqueda,(buscar,))
+                busqueda = "select nombre_artistico, album from albumes where album ilike %s"
+                formatear = '%{}%'.format(buscar)
+                cursor.execute(busqueda,(formatear,))
                 record = cursor.fetchall()
                 if len(record)==0:
                     op = input(" 1. Ingresar de nuevo\n 2. Regresar\n")
@@ -473,7 +479,7 @@ def menuprincipalPremium():
                             
                         cancion = int(input ("Ingrese el numero de opcion que desea:\n"))
                         codigoCancion = "select c.codigo_cancion from canciones c where c.estado = 'activa' and c.codigo_cancion in (select t.codigo_cancion from tiene_album_cancion t where t.codigo_album in (select t2.codigo_album from albumes t2 where t2.album = %s))"
-                        cursor.execute(codigoCancion,(buscar,))
+                        cursor.execute(codigoCancion,(eleccion,))
                         histo = cursor.fetchall()
                         historial = histo[0][0]
                         insertarcanciondiaPremium(usuario,historial)
@@ -546,8 +552,9 @@ def playlist(usuario):
                     opcion = input("¿Desea añadir canciones?\n 1. Si\n 2. No\n")
                     if opcion == '1':
                         buscar = input("Nombre de la cancion\n")
-                        busqueda = "select t.nombre_artistico,(select c.cancion from canciones c where c.cancion = %s and c.codigo_cancion = t.codigo_cancion and c.estado = 'activa') from tiene_artista_cancion t intersect select tac.nombre_artistico, (select c2.cancion  from canciones c2 where c2.codigo_cancion=tac.codigo_cancion and c2.estado ='activa') as canciones from tiene_artista_cancion tac where tac.codigo_cancion in(select c.codigo_cancion from canciones c where c.estado = 'activa')"
-                        cursor.execute(busqueda,(buscar,))
+                        busqueda = "select t.nombre_artistico,(select c.cancion from canciones c where c.cancion ilike %s and c.codigo_cancion = t.codigo_cancion and c.estado = 'activa') from tiene_artista_cancion t intersect select tac.nombre_artistico, (select c2.cancion  from canciones c2 where c2.codigo_cancion=tac.codigo_cancion and c2.estado ='activa') as canciones from tiene_artista_cancion tac where tac.codigo_cancion in(select c.codigo_cancion from canciones c where c.estado = 'activa')"
+                        formatear = '%{}%'.format(buscar)
+                        cursor.execute(busqueda,(formatear,))
                         record = cursor.fetchall()
                         if len(record) == 0:
                             print("No se encontraron canciones")
@@ -579,8 +586,9 @@ def eliminarcancion():
         
         cursor = engine.cursor()
         buscar = input("Ingresa el Nombre del Artista de la Cancion\n")
-        busqueda = "select nombre_artistico from artistas where nombre_artistico = %s"
-        cursor.execute(busqueda,(buscar,))
+        busqueda = "select nombre_artistico from artistas where nombre_artistico ilike %s"
+        formatear = '%{}%'.format(buscar)
+        cursor.execute(busqueda,(formatear,))
         record = cursor.fetchall()
         
         for i in range (0,len(record)):
@@ -625,8 +633,9 @@ def eliminarcancion():
 def eliminaralbum():
         cursor = engine.cursor()
         buscar = input("Nombre del Album\n")
-        busqueda = "select album, codigo_album from albumes where album = %s"
-        cursor.execute(busqueda,(buscar,))
+        busqueda = "select album, codigo_album from albumes where album ilike %s"
+        formatear = '%{}%'.format(buscar)
+        cursor.execute(busqueda,(formatear,))
         record = cursor.fetchall()
         for i in range (0,len(record)):
             print(str(i+1)+". "+str(record[i][0]))
@@ -672,8 +681,9 @@ def eliminaralbum():
 def eliminarartista():
         cursor = engine.cursor()
         buscar = input("Ingresa el Nombre del Artista a eliminar\n")
-        busqueda = "select nombre_artistico from artistas where nombre_artistico = %s"
-        cursor.execute(busqueda,(buscar,))
+        busqueda = "select nombre_artistico from artistas where nombre_artistico ilike %s"
+        formatear = '%{}%'.format(buscar)
+        cursor.execute(busqueda,(formatear,))
         record = cursor.fetchall()
         
         for i in range (0,len(record)):
@@ -1091,15 +1101,16 @@ while banderaTotal:
                                     if opcion =="3":
                                         cursor = engine.cursor()
                                         buscar = input("Nombre de la cancion\n")
-                                        busqueda = "select t.nombre_artistico,(select c.cancion from canciones c where c.cancion = %s and c.codigo_cancion = t.codigo_cancion and c.estado = 'activa') from tiene_artista_cancion t intersect select tac.nombre_artistico, (select c2.cancion  from canciones c2 where c2.codigo_cancion=tac.codigo_cancion and c2.estado ='activa') as canciones from tiene_artista_cancion tac where tac.codigo_cancion in(select c.codigo_cancion from canciones c where c.estado = 'activa')"
-                                        cursor.execute(busqueda,(buscar,))
+                                        busqueda = "select t.nombre_artistico,(select c.cancion from canciones c where c.cancion ilike %s and c.codigo_cancion = t.codigo_cancion and c.estado = 'activa') from tiene_artista_cancion t intersect select tac.nombre_artistico, (select c2.cancion  from canciones c2 where c2.codigo_cancion=tac.codigo_cancion and c2.estado ='activa') as canciones from tiene_artista_cancion tac where tac.codigo_cancion in(select c.codigo_cancion from canciones c where c.estado = 'activa')"
+                                        formatear = '%{}%'.format(buscar)
+                                        cursor.execute(busqueda,(formatear,))
                                         record = cursor.fetchall()                       
                                         for i in range (0,len(record)):
                                             print(str(i+1)+". "+str(record[i][0])+", "+str(record[i][1]))
                                         
                                         cancion = int(input ("Ingrese el numero de opcion que desea:\n"))
                                         codigoCancion = "select c.codigo_cancion from canciones c where c.cancion = %s"
-                                        cursor.execute(codigoCancion,(buscar,))
+                                        cursor.execute(codigoCancion,(record[cancion-1][1],))
                                         histo = cursor.fetchall()
                                         historial = histo[0][0]
                                         cambiarEstado = "update canciones set estado = 'inactiva' where codigo_cancion = %s"
@@ -1111,15 +1122,16 @@ while banderaTotal:
                                         bandera = True
                                         cursor = engine.cursor()
                                         buscar = input("Nombre de la cancion\n")
-                                        busqueda = "select t.nombre_artistico,(select c.cancion from canciones c where c.cancion = %s and c.codigo_cancion = t.codigo_cancion and c.estado = 'activa') from tiene_artista_cancion t intersect select tac.nombre_artistico, (select c2.cancion  from canciones c2 where c2.codigo_cancion=tac.codigo_cancion and c2.estado ='activa') as canciones from tiene_artista_cancion tac where tac.codigo_cancion in(select c.codigo_cancion from canciones c where c.estado = 'activa')"
-                                        cursor.execute(busqueda,(buscar,))
+                                        busqueda = "select t.nombre_artistico,(select c.cancion from canciones c where c.cancion ilike %s and c.codigo_cancion = t.codigo_cancion) from tiene_artista_cancion t intersect select tac.nombre_artistico, (select c2.cancion  from canciones c2 where c2.codigo_cancion=tac.codigo_cancion) as canciones from tiene_artista_cancion tac where tac.codigo_cancion in(select c.codigo_cancion from canciones c)"
+                                        formatear = '%{}%'.format(buscar)
+                                        cursor.execute(busqueda,(formatear,))
                                         record = cursor.fetchall()                       
                                         for i in range (0,len(record)):
                                             print(str(i+1)+". "+str(record[i][0])+", "+str(record[i][1]))
                                         
                                         cancion = int(input ("Ingrese el numero de opcion que desea:\n"))
                                         codigoCancion = "select c.codigo_cancion from canciones c where c.cancion = %s"
-                                        cursor.execute(codigoCancion,(buscar,))
+                                        cursor.execute(codigoCancion,(record[cancion-1][1],))
                                         histo = cursor.fetchall()
                                         historial = histo[0][0]
                                         while bandera:
@@ -1140,15 +1152,16 @@ while banderaTotal:
                                         bandera = True
                                         cursor = engine.cursor()
                                         buscar = input("Nombre del artista\n")
-                                        busqueda = "select nombre_artistico from artistas where nombre_artistico =%s"
-                                        cursor.execute(busqueda,(buscar,))
+                                        busqueda = "select nombre_artistico from artistas where nombre_artistico ilike %s"
+                                        formatear = '%{}%'.format(buscar)
+                                        cursor.execute(busqueda,(formatear,))
                                         record = cursor.fetchall()                       
                                         for i in range (0,len(record)):
-                                            print(str(i+1)+". "+str(record[i]))
+                                            print(str(i+1)+". "+str(record[i][0]))
                                         
                                         cancion = int(input ("Ingrese el numero de opcion que desea:\n"))
                                         codigoCancion = "select a.usuario from artistas a where a.nombre_artistico = %s"
-                                        cursor.execute(codigoCancion,(buscar,))
+                                        cursor.execute(codigoCancion,(str(record[cancion-1][0]),))
                                         histo = cursor.fetchall()
                                         historial = histo[0][0]
                         
@@ -1169,8 +1182,9 @@ while banderaTotal:
                                         bandera = True
                                         cursor = engine.cursor()
                                         buscar = input("Nombre del album\n")
-                                        busqueda = "select nombre_artistico, album from albumes where album = %s"
-                                        cursor.execute(busqueda,(buscar,))
+                                        busqueda = "select nombre_artistico, album from albumes where album ilike %s"
+                                        formatear = '%{}%'.format(buscar)
+                                        cursor.execute(busqueda,(formatear,))
                                         record = cursor.fetchall()                       
                                         for i in range (0,len(record)):
                                             print(str(i+1)+". "+str(record[i][0])+", "+str(record[i][1]))
@@ -1322,15 +1336,16 @@ while banderaTotal:
                                     if opcion =="4":
                                         cursor = engine.cursor()
                                         buscar = input("Nombre de la cancion\n")
-                                        busqueda ="select t.nombre_artistico,(select c.cancion from canciones c where c.cancion = %s and c.codigo_cancion = t.codigo_cancion and c.estado = 'activa') from tiene_artista_cancion t intersect select tac.nombre_artistico, (select c2.cancion  from canciones c2 where c2.codigo_cancion=tac.codigo_cancion and c2.estado ='activa') as canciones from tiene_artista_cancion tac where tac.codigo_cancion in(select c.codigo_cancion from canciones c where c.estado = 'activa')"
-                                        cursor.execute(busqueda,(buscar,))
+                                        busqueda ="select t.nombre_artistico,(select c.cancion from canciones c where c.cancion ilike %s and c.codigo_cancion = t.codigo_cancion and c.estado = 'activa') from tiene_artista_cancion t intersect select tac.nombre_artistico, (select c2.cancion  from canciones c2 where c2.codigo_cancion=tac.codigo_cancion and c2.estado ='activa') as canciones from tiene_artista_cancion tac where tac.codigo_cancion in(select c.codigo_cancion from canciones c where c.estado = 'activa')"
+                                        formatear = '%{}%'.format(buscar)
+                                        cursor.execute(busqueda,(formatear,))
                                         record = cursor.fetchall()                       
                                         for i in range (0,len(record)):
-                                            print(str(i+1)+". "+str(record[i]))
+                                            print(str(i+1)+". "+str(record[i][0])+", "+str(record[i][1]))
                                         
                                         cancion = int(input ("Ingrese el numero de opcion que desea:\n"))
                                         codigoCancion = "select c.codigo_cancion from canciones c where c.cancion = %s"
-                                        cursor.execute(codigoCancion,(buscar,))
+                                        cursor.execute(codigoCancion,(record[cancion-1][1],))
                                         histo = cursor.fetchall()
                                         historial = histo[0][0]
                                         cambiarEstado = "update canciones set estado = 'inactiva' where codigo_cancion = %s"
@@ -1343,15 +1358,16 @@ while banderaTotal:
                                         bandera = True
                                         cursor = engine.cursor()
                                         buscar = input("Nombre de la cancion\n")
-                                        busqueda = "select t.nombre_artistico,(select c.cancion from canciones c where c.cancion = %s and c.codigo_cancion = t.codigo_cancion and c.estado = 'activa') from tiene_artista_cancion t intersect select tac.nombre_artistico, (select c2.cancion  from canciones c2 where c2.codigo_cancion=tac.codigo_cancion and c2.estado ='activa') as canciones from tiene_artista_cancion tac where tac.codigo_cancion in(select c.codigo_cancion from canciones c where c.estado = 'activa')"
-                                        cursor.execute(busqueda,(buscar,))
+                                        busqueda = "select t.nombre_artistico,(select c.cancion from canciones c where c.cancion ilike %s and c.codigo_cancion = t.codigo_cancion) from tiene_artista_cancion t intersect select tac.nombre_artistico, (select c2.cancion  from canciones c2 where c2.codigo_cancion=tac.codigo_cancion ) as canciones from tiene_artista_cancion tac where tac.codigo_cancion in(select c.codigo_cancion from canciones c)"
+                                        formatear = '%{}%'.format(buscar)
+                                        cursor.execute(busqueda,(formatear,))
                                         record = cursor.fetchall()                       
                                         for i in range (0,len(record)):
-                                            print(str(i+1)+". "+str(record[i]))
+                                            print(str(i+1)+". "+str(record[i][0])+", "+str(record[i][1]))
                                         
                                         cancion = int(input ("Ingrese el numero de opcion que desea:\n"))
                                         codigoCancion = "select c.codigo_cancion from canciones c where c.cancion = %s"
-                                        cursor.execute(codigoCancion,(buscar,))
+                                        cursor.execute(codigoCancion,(record[cancion-1][1],))
                                         histo = cursor.fetchall()
                                         historial = histo[0][0]
                                         while bandera:
@@ -1371,15 +1387,16 @@ while banderaTotal:
                                         bandera = True
                                         cursor = engine.cursor()
                                         buscar = input("Nombre del album\n")
-                                        busqueda = "select nombre_artistico, album from albumes where album = %s"
-                                        cursor.execute(busqueda,(buscar,))
+                                        busqueda = "select nombre_artistico, album from albumes where album ilike %s"
+                                        formatear = '%{}%'.format(buscar)
+                                        cursor.execute(busqueda,(formatear,))
                                         record = cursor.fetchall()                       
                                         for i in range (0,len(record)):
                                             print(str(i+1)+". "+str(record[i][0])+", "+str(record[i][1]))
                                         
                                         cancion = int(input ("Ingrese el numero de opcion que desea:\n"))
                                         codigoCancion = "select codigo_album from albumes where album = %s"
-                                        cursor.execute(codigoCancion,(buscar,))
+                                        cursor.execute(codigoCancion,(record[cancion-1][1],))
                                         histo = cursor.fetchall()
                                         historial = histo[0][0]
                                         while bandera:
@@ -1401,15 +1418,16 @@ while banderaTotal:
                                         bandera = True
                                         cursor = engine.cursor()
                                         buscar = input("Nombre del artista\n")
-                                        busqueda = "select nombre_artistico from artistas where nombre_artistico =%s"
-                                        cursor.execute(busqueda,(buscar,))
+                                        busqueda = "select nombre_artistico from artistas where nombre_artistico ilike %s"
+                                        formatear = '%{}%'.format(buscar)
+                                        cursor.execute(busqueda,(formatear,))
                                         record = cursor.fetchall()                       
                                         for i in range (0,len(record)):
-                                            print(str(i+1)+". "+str(record[i]))
+                                            print(str(i+1)+". "+str(record[i][0]))
                                         
                                         cancion = int(input ("Ingrese el numero de opcion que desea:\n"))
                                         codigoCancion = "select a.usuario from artistas a where a.nombre_artistico = %s"
-                                        cursor.execute(codigoCancion,(buscar,))
+                                        cursor.execute(codigoCancion,(record[cancion-1][0],))
                                         histo = cursor.fetchall()
                                         historial = histo[0][0]
                                         
