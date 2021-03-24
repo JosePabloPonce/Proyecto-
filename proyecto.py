@@ -123,7 +123,6 @@ def insertarcanciondiaNoPremium(usuario,codigo_cancion):
     con = "select count(h.codigo_escucha) from historial h where h.usuario = %s"
     cursor.execute(con,(usuario,))
     conteo = cursor.fetchall()
-    print(conteo[0][0])
     if conteo[0][0] == 3:
         return False
     else:
@@ -183,7 +182,7 @@ def menuprincipalNoPremium():
             banderaCancion = True
             while banderaCancion:
                 buscar = input("Nombre de la cancion\n")
-                busqueda = "select t.nombre_artistico,(select c.cancion from canciones c where c.cancion = %s and c.codigo_cancion = t.codigo_cancion and c.estado = 'activa') from tiene_artista_cancion t intersect select tac.nombre_artistico, (select c2.cancion  from canciones c2 where c2.codigo_cancion=tac.codigo_cancion and c2.estado ='activa') as canciones from tiene_artista_cancion tac"
+                busqueda = "select t.nombre_artistico,(select c.cancion from canciones c where c.cancion = %s and c.codigo_cancion = t.codigo_cancion and c.estado = 'activa') from tiene_artista_cancion t intersect select tac.nombre_artistico, (select c2.cancion  from canciones c2 where c2.codigo_cancion=tac.codigo_cancion and c2.estado ='activa') as canciones from tiene_artista_cancion tac where tac.codigo_cancion in(select c.codigo_cancion from canciones c where c.estado = 'activa')"
                 cursor.execute(busqueda,(buscar,))
                 record = cursor.fetchall()
                 if len(record) == 0:
@@ -228,20 +227,26 @@ def menuprincipalNoPremium():
                     cancion = "select c.cancion from canciones c where c.estado = 'activa' and c.codigo_cancion in (select t.codigo_cancion from tiene_artista_cancion t where t.nombre_artistico = %s)"
                     cursor.execute(cancion,(eleccion,))
                     record = cursor.fetchall()
-                    for i in range (0,len(record)):
-                        print(str(i+1)+". "+eleccion+" "+str(record[i][0]))
-                        
-                    cancion = int(input ("Ingrese el numero de opcion que desea:\n"))
-                    codigoCancion = "select c.codigo_cancion from canciones c where c.estado = 'activa' and c.codigo_cancion in(select t.codigo_cancion from tiene_artista_cancion t where t.nombre_artistico = %s)"
-                    cursor.execute(codigoCancion,(buscar,))
-                    histo = cursor.fetchall()
-                    historial = histo[0][0]
-                    if(insertarcanciondiaNoPremium(usuario,historial)):
-                        kit.playonyt(eleccion+str(record[cancion-1]))
-                        banderaArtista = False
+                    if len(record) == 0:
+                        print("El artista no tiene canciones\n")
+                        op = input(" 1. Ingresar de nuevo\n 2. Regresar\n")
+                        if op == "2":
+                            banderaArtista = False
                     else:
-                        print("Ya no puedes reproducir mas canciones")
-                        banderaArtista = False
+                        for i in range (0,len(record)):
+                            print(str(i+1)+". "+str(record[i][0]))
+                        
+                        cancion = int(input ("Ingrese el numero de opcion que desea:\n"))
+                        codigoCancion = "select c.codigo_cancion from canciones c where c.estado = 'activa' and c.codigo_cancion in(select t.codigo_cancion from tiene_artista_cancion t where t.nombre_artistico = %s)"
+                        cursor.execute(codigoCancion,(buscar,))
+                        histo = cursor.fetchall()
+                        historial = histo[0][0]
+                        if(insertarcanciondiaNoPremium(usuario,historial)):
+                            kit.playonyt(eleccion+str(record[cancion-1]))
+                            banderaArtista = False
+                        else:
+                            print("Ya no puedes reproducir mas canciones")
+                            banderaArtista = False
                     #abrir cancion youtube
         if opcion == '3':
             banderaGenero = True
@@ -260,7 +265,7 @@ def menuprincipalNoPremium():
                         
                     artista = int(input("Ingrese la opcion de genero:\n"))
                     eleccion = str(record[artista-1][0])
-                    cancion = "select tac.nombre_artistico, (select c2.cancion from canciones c2 where c2.codigo_cancion=tac.codigo_cancion and c2.estado = 'activa' and c2.codigo_cancion in (select tgc.codigo_cancion from tiene_genero_cancion tgc where tgc.genero=%s))from tiene_artista_cancion tac intersect select tac.nombre_artistico, (select c2.cancion  from canciones c2 where c2.codigo_cancion=tac.codigo_cancion and c2.estado ='activa') as canciones from tiene_artista_cancion tac"
+                    cancion = "select tac.nombre_artistico, (select c2.cancion from canciones c2 where c2.codigo_cancion=tac.codigo_cancion and c2.estado = 'activa' and c2.codigo_cancion in (select tgc.codigo_cancion from tiene_genero_cancion tgc where tgc.genero=%s))from tiene_artista_cancion tac intersect select tac.nombre_artistico, (select c2.cancion  from canciones c2 where c2.codigo_cancion=tac.codigo_cancion and c2.estado ='activa') as canciones from tiene_artista_cancion tac where tac.codigo_cancion in(select c.codigo_cancion from canciones c where c.estado = 'activa')"
                     cursor.execute(cancion,(eleccion,))
                     record = cursor.fetchall()
                     for i in range (0,len(record)):
@@ -282,7 +287,7 @@ def menuprincipalNoPremium():
             banderaAlbum = True
             while banderaAlbum:
                 buscar = input("Nombre del Album\n")
-                busqueda = "select album from albumes where album = %s"
+                busqueda = "select nombre_artistico, album from albumes where album = %s"
                 cursor.execute(busqueda,(buscar,))
                 record = cursor.fetchall()
                 if len(record)==0:
@@ -292,28 +297,34 @@ def menuprincipalNoPremium():
                         banderaAlbum = False
                 else:
                     for i in range (0,len(record)):
-                        print(str(i+1)+". "+str(record[i][0]))
-                        
-                    artista = int(input("Ingrese la opcion de album:\n"))
-                    eleccion = str(record[artista-1][0])
-                    print(eleccion)
-                    cancion = "select t.nombre_artistico,(select c.cancion from canciones c where c.estado = 'activa' and c.codigo_cancion = t.codigo_cancion and c.codigo_cancion in (select t2.codigo_cancion from tiene_album_cancion t2 where t2.codigo_album in (select t3.codigo_album from albumes t3 where t3.album = %s))) from tiene_artista_cancion t intersect select tac.nombre_artistico, (select c2.cancion  from canciones c2 where c2.codigo_cancion=tac.codigo_cancion and c2.estado ='activa') as canciones from tiene_artista_cancion tac"
-                    cursor.execute(cancion,(eleccion,))
-                    record = cursor.fetchall()
-                    for i in range (0,len(record)):
                         print(str(i+1)+". "+str(record[i][0])+", "+str(record[i][1]))
                         
-                    cancion = int(input ("Ingrese el numero de opcion que desea:\n"))
-                    codigoCancion = "select c.codigo_cancion from canciones c where c.estado = 'activa' and c.codigo_cancion in (select t.codigo_cancion from tiene_album_cancion t where t.codigo_album in (select t2.codigo_album from albumes t2 where t2.album = %s)) "
-                    cursor.execute(codigoCancion,(buscar,))
-                    histo = cursor.fetchall()
-                    historial = histo[0][0]
-                    if(insertarcanciondiaNoPremium(usuario,historial)):
-                        kit.playonyt(str(record[cancion-1][0])+", "+ str(record[cancion-1][1]))
-                        banderaAlbum = False
+                    artista = int(input("Ingrese la opcion de album:\n"))
+                    eleccion = str(record[artista-1][1])
+                    print(eleccion)
+                    cancion = "select t.nombre_artistico,(select c.cancion from canciones c where c.estado = 'activa' and c.codigo_cancion = t.codigo_cancion and c.codigo_cancion in (select t2.codigo_cancion from tiene_album_cancion t2 where t2.codigo_album in (select t3.codigo_album from albumes t3 where t3.album = %s))) from tiene_artista_cancion t intersect select tac.nombre_artistico, (select c2.cancion  from canciones c2 where c2.codigo_cancion=tac.codigo_cancion and c2.estado ='activa') as canciones from tiene_artista_cancion tac where tac.codigo_cancion in(select c.codigo_cancion from canciones c where c.estado = 'activa')"
+                    cursor.execute(cancion,(eleccion,))
+                    record = cursor.fetchall()
+                    if len(record)==0:
+                        print("El album no tiene canciones :( ingresa otro\n")
+                        op = input(" 1. Ingresar de nuevo\n 2. Regresar\n")
+                        if op == "2":
+                            banderaAlbum = False
                     else:
-                        print("Ya no puedes reproducir mas canciones")
-                        banderaAlbum = False
+                        for i in range (0,len(record)):
+                            print(str(i+1)+". "+str(record[i][0])+", "+str(record[i][1]))
+                            
+                        cancion = int(input ("Ingrese el numero de opcion que desea:\n"))
+                        codigoCancion = "select c.codigo_cancion from canciones c where c.estado = 'activa' and c.codigo_cancion in (select t.codigo_cancion from tiene_album_cancion t where t.codigo_album in (select t2.codigo_album from albumes t2 where t2.album = %s)) "
+                        cursor.execute(codigoCancion,(buscar,))
+                        histo = cursor.fetchall()
+                        historial = histo[0][0]
+                        if(insertarcanciondiaNoPremium(usuario,historial)):
+                            kit.playonyt(str(record[cancion-1][0])+", "+ str(record[cancion-1][1]))
+                            banderaAlbum = False
+                        else:
+                            print("Ya no puedes reproducir mas canciones")
+                            banderaAlbum = False
                     #abrir cancion youtube
         if opcion == '5':
             print("Adios")
@@ -328,12 +339,12 @@ def menuprincipalPremium():
     print("Bienvenido "+ str(record[0][0]))
     menu = True
     while menu:
-        opcion = input("Buscar:\n 1.Cancion \n 2.Artista \n 3.Genero \n 4.Album\n 5.Anadir Playlist\n 6.Salir\n")
+        opcion = input("Buscar:\n 1.Cancion \n 2.Artista \n 3.Genero \n 4.Album\n 5.Salir\n")
         if opcion == '1':
             banderaCancion = True
             while banderaCancion:
                 buscar = input("Nombre de la cancion\n")
-                busqueda = "select t.nombre_artistico,(select c.cancion from canciones c where c.cancion = '120' and c.codigo_cancion = t.codigo_cancion and c.estado = 'activa') from tiene_artista_cancion t intersect select tac.nombre_artistico, (select c2.cancion  from canciones c2 where c2.codigo_cancion=tac.codigo_cancion and c2.estado ='activa') as canciones from tiene_artista_cancion tac"
+                busqueda = "select t.nombre_artistico,(select c.cancion from canciones c where c.cancion = %s and c.codigo_cancion = t.codigo_cancion and c.estado = 'activa') from tiene_artista_cancion t intersect select tac.nombre_artistico, (select c2.cancion  from canciones c2 where c2.codigo_cancion=tac.codigo_cancion and c2.estado ='activa') as canciones from tiene_artista_cancion tac where tac.codigo_cancion in(select c.codigo_cancion from canciones c where c.estado = 'activa')"
                 cursor.execute(busqueda,(buscar,))
                 record = cursor.fetchall()
                 if len(record) == 0:
@@ -344,7 +355,8 @@ def menuprincipalPremium():
                 else:
                     for i in range (0,len(record)):
                         print(str(i+1)+". "+str(record[i][0])+", "+str(record[i][1]))
-                    
+       
+       
                     cancion = int(input ("Ingrese el numero de opcion que desea:\n"))
                     codigoCancion = "select c.codigo_cancion from canciones c where c.estado = 'activa' and c.cancion = %s"
                     cursor.execute(codigoCancion,(buscar,))
@@ -377,17 +389,24 @@ def menuprincipalPremium():
                     cancion = "select c.cancion from canciones c where c.estado = 'activa' and c.codigo_cancion in (select t.codigo_cancion from tiene_artista_cancion t where t.nombre_artistico = %s)"
                     cursor.execute(cancion,(eleccion,))
                     record = cursor.fetchall()
-                    for i in range (0,len(record)):
-                        print(str(i+1)+". "+eleccion+" "+str(record[i][0]))
+                    if len(record) == 0:
+                        print("El artista no tiene canciones\n")
+                        ope = input(" 1. Ingresar de nuevo\n 2. Regresar\n")
+                        if ope == "2":
+                            banderaArtista = False
+                    else:
+                        for i in range (0,len(record)):
+                            print(str(i+1)+". "+str(record[i][0]))
+          
                         
-                    cancion = int(input ("Ingrese el numero de opcion que desea:\n"))
-                    codigoCancion = "select c.codigo_cancion from canciones c where c.estado = 'activa' and c.codigo_cancion in(select t.codigo_cancion from tiene_artista_cancion t where t.nombre_artistico = %s)"
-                    cursor.execute(codigoCancion,(buscar,))
-                    histo = cursor.fetchall()
-                    historial = histo[0][0]
-                    insertarcanciondiaPremium(usuario,historial)
-                    kit.playonyt(eleccion+str(record[cancion-1]))
-                    banderaArtista = False
+                        cancion = int(input ("Ingrese el numero de opcion que desea:\n"))
+                        codigoCancion = "select c.codigo_cancion from canciones c where c.estado = 'activa' and c.codigo_cancion in(select t.codigo_cancion from tiene_artista_cancion t where t.nombre_artistico = %s)"
+                        cursor.execute(codigoCancion,(buscar,))
+                        histo = cursor.fetchall()
+                        historial = histo[0][0]
+                        insertarcanciondiaPremium(usuario,historial)
+                        kit.playonyt(eleccion+str(record[cancion-1]))
+                        banderaArtista = False
         
                 
             #abrir cancion youtube
@@ -408,7 +427,7 @@ def menuprincipalPremium():
                         
                     artista = int(input("Ingrese la opcion de genero:\n"))
                     eleccion = str(record[artista-1][0])
-                    cancion = "select tac.nombre_artistico, (select c2.cancion from canciones c2 where c2.codigo_cancion=tac.codigo_cancion and c2.estado = 'activa' and c2.codigo_cancion in (select tgc.codigo_cancion from tiene_genero_cancion tgc where tgc.genero=%s))from tiene_artista_cancion tac intersect select tac.nombre_artistico, (select c2.cancion  from canciones c2 where c2.codigo_cancion=tac.codigo_cancion and c2.estado ='activa') as canciones from tiene_artista_cancion tac"
+                    cancion = "select tac.nombre_artistico, (select c2.cancion from canciones c2 where c2.codigo_cancion=tac.codigo_cancion and c2.estado = 'activa' and c2.codigo_cancion in (select tgc.codigo_cancion from tiene_genero_cancion tgc where tgc.genero=%s))from tiene_artista_cancion tac intersect select tac.nombre_artistico, (select c2.cancion  from canciones c2 where c2.codigo_cancion=tac.codigo_cancion and c2.estado ='activa') as canciones from tiene_artista_cancion tac where tac.codigo_cancion in(select c.codigo_cancion from canciones c where c.estado = 'activa')"
                     cursor.execute(cancion,(eleccion,))
                     record = cursor.fetchall()
                     for i in range (0,len(record)):
@@ -427,7 +446,7 @@ def menuprincipalPremium():
             banderaAlbum = True
             while banderaAlbum:
                 buscar = input("Nombre del Album\n")
-                busqueda = "select album from albumes where album = %s"
+                busqueda = "select nombre_artistico, album from albumes where album = %s"
                 cursor.execute(busqueda,(buscar,))
                 record = cursor.fetchall()
                 if len(record)==0:
@@ -436,119 +455,128 @@ def menuprincipalPremium():
                         banderaAlbum = False
                 else:
                     for i in range (0,len(record)):
-                        print(str(i+1)+". "+str(record[i][0]))
+                        print(str(i+1)+". "+str(record[i][0])+", "+str(record[i][1]))
                         
                     artista = int(input("Ingrese la opcion de album:\n"))
-                    eleccion = str(record[artista-1][0])
-                    print(eleccion)
-                    cancion = "select t.nombre_artistico,(select c.cancion from canciones c where c.estado = 'activa' and c.codigo_cancion = t.codigo_cancion and c.codigo_cancion in (select t2.codigo_cancion from tiene_album_cancion t2 where t2.codigo_album in (select t3.codigo_album from albumes t3 where t3.album = %s))) from tiene_artista_cancion t intersect select tac.nombre_artistico, (select c2.cancion  from canciones c2 where c2.codigo_cancion=tac.codigo_cancion and c2.estado ='activa') as canciones from tiene_artista_cancion tac"
+                    eleccion = str(record[artista-1][1])
+                    cancion = "select t.nombre_artistico,(select c.cancion from canciones c where c.estado = 'activa' and c.codigo_cancion = t.codigo_cancion and c.codigo_cancion in (select t2.codigo_cancion from tiene_album_cancion t2 where t2.codigo_album in (select t3.codigo_album from albumes t3 where t3.album = %s))) from tiene_artista_cancion t intersect select tac.nombre_artistico, (select c2.cancion  from canciones c2 where c2.codigo_cancion=tac.codigo_cancion and c2.estado ='activa') as canciones from tiene_artista_cancion tac where tac.codigo_cancion in(select c.codigo_cancion from canciones c where c.estado = 'activa')"
                     cursor.execute(cancion,(eleccion,))
                     record = cursor.fetchall()
+                    if len(record)==0:
+                        print("El album no tiene canciones :( ingresa otro\n")
+                        op = input(" 1. Ingresar de nuevo\n 2. Regresar\n")
+                        if op == "2":
+                            banderaAlbum = False
+                    else:
+                        for i in range (0,len(record)):
+                            print(str(i+1)+". "+str(record[i][0])+", "+str(record[i][1]))
+                            
+                        cancion = int(input ("Ingrese el numero de opcion que desea:\n"))
+                        codigoCancion = "select c.codigo_cancion from canciones c where c.estado = 'activa' and c.codigo_cancion in (select t.codigo_cancion from tiene_album_cancion t where t.codigo_album in (select t2.codigo_album from albumes t2 where t2.album = %s))"
+                        cursor.execute(codigoCancion,(buscar,))
+                        histo = cursor.fetchall()
+                        historial = histo[0][0]
+                        insertarcanciondiaPremium(usuario,historial)
+                        kit.playonyt(str(record[cancion-1][0])+", "+str(record[cancion-1][1]))
+                        banderaAlbum = False
+                    #abrir cancion youtube
+        if opcion == '5':
+            print("Adios")
+            menu = False
+            
+                    
+            
+ 
+
+def playlist(usuario):
+    cursor = engine.cursor()
+    bandera = True
+    while bandera:
+        opcion = input(" 1.Anadir Playlist \n 2.Ver Playlists \n 3. Salir\n")
+        if opcion == '1':
+            banderaCodigo = True
+            nombre = input("Ingrese el nombre de la playlist:\n")
+            while banderaCodigo:
+                codigoplaylist = str((random.randint(3, 100000)))
+                query = "select codigo_playlist from playlists"
+                cursor.execute(query)
+                lista = cursor.fetchall()
+                if codigoplaylist not in lista:
+                    insertar = "insert into playlists values(%s,%s,%s)"
+                    datos = (nombre, codigoplaylist, usuario)
+                    cursor.execute(insertar, datos)
+                    engine.commit()
+                    print("Playlist creada\n")
+                    banderaCodigo = False
+                else:
+                    banderaCodigo = True
+            
+        if opcion == '2':
+            verPlaylist = "select nombre from playlists where usuario = %s"
+            cursor.execute(verPlaylist, (usuario,))
+            record = cursor.fetchall()
+            if len(record) == 0:
+                print("No se encontraron playlists :(")
+            else:
+                for i in range (0,len(record)):
+                    print(str(i+1)+". "+str(record[i][0]))
+                    
+                artista = int(input("Ingrese la opcion de playlist:\n"))
+                eleccion = str(record[artista-1][0])
+                query = "select t3.nombre_artistico,(select c.cancion from canciones c where c.estado = 'activa' and c.codigo_cancion = t3.codigo_cancion and c.codigo_cancion in (select t.codigo_cancion from tiene_playlist_cancion t where t.codigo_playlist in (select t2.codigo_playlist from playlists t2 where t2.nombre = %s)))from tiene_artista_cancion t3 intersect select tac.nombre_artistico, (select c2.cancion  from canciones c2 where c2.codigo_cancion=tac.codigo_cancion and c2.estado ='activa') as canciones from tiene_artista_cancion tac"
+                cursor.execute(query,(eleccion,))
+                record = cursor.fetchall()
+                if len(record) == 0:
+                    print("No tienes canciones en la playlist")
+                else:
+                    print("Canciones que tiene la playlist:\n")
                     for i in range (0,len(record)):
                         print(str(i+1)+". "+str(record[i][0])+", "+str(record[i][1]))
                         
                     cancion = int(input ("Ingrese el numero de opcion que desea:\n"))
-                    codigoCancion = "select c.codigo_cancion from canciones c where c.estado = 'activa' and c.codigo_cancion in (select t.codigo_cancion from tiene_album_cancion t where t.codigo_album in (select t2.codigo_album from albumes t2 where t2.album = %s))"
-                    cursor.execute(codigoCancion,(buscar,))
+                    codigoCancion = "select c.codigo_cancion from canciones c where c.estado = 'activa' and c.cancion = %s"
+                    cursor.execute(codigoCancion,(record[cancion-1][1],))
                     histo = cursor.fetchall()
                     historial = histo[0][0]
                     insertarcanciondiaPremium(usuario,historial)
                     kit.playonyt(str(record[cancion-1][0])+", "+str(record[cancion-1][1]))
-                    banderaAlbum = False
-                    #abrir cancion youtube
-        if opcion == '5':
-            bandera = True
-            while bandera:
-                opcion = input(" 1.Anadir Playlist \n 2.Ver Playlists \n 3. Salir\n")
-                if opcion == '1':
-                    banderaCodigo = True
-                    nombre = input("Ingrese el nombre de la playlist:\n")
-                    while banderaCodigo:
-                        codigoplaylist = str((random.randint(3, 100000)))
-                        query = "select codigo_playlist from playlists"
-                        cursor.execute(query)
-                        lista = cursor.fetchall()
-                        if codigoplaylist not in lista:
-                            insertar = "insert into playlists values(%s,%s,%s)"
-                            datos = (nombre, codigoplaylist, usuario)
-                            cursor.execute(insertar, datos)
-                            engine.commit()
-                            banderaCodigo = False
-                        else:
-                            banderaCodigo = True
                     
-                if opcion == '2':
-                    verPlaylist = "select nombre from playlists where usuario = %s"
-                    cursor.execute(verPlaylist, (usuario,))
-                    record = cursor.fetchall()
-                    if len(record) == 0:
-                        print("No se encontraron playlists :(")
-                    else:
-                        for i in range (0,len(record)):
-                            print(str(i+1)+". "+str(record[i][0]))
-                            
-                        artista = int(input("Ingrese la opcion de playlist:\n"))
-                        eleccion = str(record[artista-1][0])
-                        query = "select t3.nombre_artistico,(select c.cancion from canciones c where c.estado = 'activa' and c.codigo_cancion = t3.codigo_cancion and c.codigo_cancion in (select t.codigo_cancion from tiene_playlist_cancion t where t.codigo_playlist in (select t2.codigo_playlist from playlists t2 where t2.nombre = %s)))from tiene_artista_cancion t3 intersect select tac.nombre_artistico, (select c2.cancion  from canciones c2 where c2.codigo_cancion=tac.codigo_cancion and c2.estado ='activa') as canciones from tiene_artista_cancion tac"
-                        cursor.execute(query,(eleccion,))
+                bandera2 = True
+                while bandera2:
+                    opcion = input("¿Desea añadir canciones?\n 1. Si\n 2. No\n")
+                    if opcion == '1':
+                        buscar = input("Nombre de la cancion\n")
+                        busqueda = "select t.nombre_artistico,(select c.cancion from canciones c where c.cancion = %s and c.codigo_cancion = t.codigo_cancion and c.estado = 'activa') from tiene_artista_cancion t intersect select tac.nombre_artistico, (select c2.cancion  from canciones c2 where c2.codigo_cancion=tac.codigo_cancion and c2.estado ='activa') as canciones from tiene_artista_cancion tac where tac.codigo_cancion in(select c.codigo_cancion from canciones c where c.estado = 'activa')"
+                        cursor.execute(busqueda,(buscar,))
                         record = cursor.fetchall()
                         if len(record) == 0:
-                            print("No tienes canciones en la playlist")
+                            print("No se encontraron canciones")
                         else:
-                            print("Canciones que tiene la playlist:\n")
                             for i in range (0,len(record)):
                                 print(str(i+1)+". "+str(record[i][0])+", "+str(record[i][1]))
-                                
-                            cancion = int(input ("Ingrese el numero de opcion que desea:\n"))
-                            codigoCancion = "select c.codigo_cancion from canciones c where c.estado = 'activa' and c.cancion = %s"
-                            cursor.execute(codigoCancion,(record[cancion-1][1],))
-                            histo = cursor.fetchall()
-                            historial = histo[0][0]
-                            insertarcanciondiaPremium(usuario,historial)
-                            kit.playonyt(str(record[cancion-1][0])+", "+str(record[cancion-1][1]))
                             
-                        bandera2 = True
-                        while bandera2:
-                            opcion = input("¿Desea añadir canciones?\n 1. Si\n 2. No\n")
-                            if opcion == '1':
-                                buscar = input("Nombre de la cancion\n")
-                                busqueda = "select t.nombre_artistico,(select c.cancion from canciones c where c.cancion = %s and c.codigo_cancion = t.codigo_cancion and c.estado = 'activa') from tiene_artista_cancion t intersect select tac.nombre_artistico, (select c2.cancion  from canciones c2 where c2.codigo_cancion=tac.codigo_cancion and c2.estado ='activa') as canciones from tiene_artista_cancion tac"
-                                cursor.execute(busqueda,(buscar,))
-                                record = cursor.fetchall()
-                                if len(record) == 0:
-                                    print("No se encontraron canciones")
-                                else:
-                                    for i in range (0,len(record)):
-                                        print(str(i+1)+". "+str(record[i]))
-                                    
-                                    cancion = int(input ("Ingrese el numero de opcion que desea:\n"))
-                                    can = str(record[cancion-1][1])
-                                    codigoCancion = "select c.codigo_cancion from canciones c where c.estado = 'activa' and c.cancion = %s"
-                                    cursor.execute(codigoCancion,(can,))
-                                    recordCancion = cursor.fetchall()
-                                    codigoPlaylist = "select c.codigo_playlist from playlists c where c.nombre = %s"
-                                    cursor.execute(codigoPlaylist,(eleccion,))
-                                    recordPlaylist = cursor.fetchall()
-                                    insertar = "insert into tiene_playlist_cancion values(%s,%s)"
-                                    datos = (recordCancion[0][0],recordPlaylist[0][0])
-                                    cursor.execute(insertar, datos)
-                                    engine.commit()
-                            if opcion == '2':
-                                bandera2 = False
-                    
-                if opcion == '3':
-                    bandera = False
-                    
+                            cancion = int(input ("Ingrese el numero de opcion que desea:\n"))
+                            can = str(record[cancion-1][1])
+                            codigoCancion = "select c.codigo_cancion from canciones c where c.estado = 'activa' and c.cancion = %s"
+                            cursor.execute(codigoCancion,(can,))
+                            recordCancion = cursor.fetchall()
+                            codigoPlaylist = "select c.codigo_playlist from playlists c where c.nombre = %s"
+                            cursor.execute(codigoPlaylist,(eleccion,))
+                            recordPlaylist = cursor.fetchall()
+                            insertar = "insert into tiene_playlist_cancion values(%s,%s)"
+                            datos = (recordCancion[0][0],recordPlaylist[0][0])
+                            cursor.execute(insertar, datos)
+                            engine.commit()
+                            print("Cancion agregada")
+                    if opcion == '2':
+                        bandera2 = False
+            
+        if opcion == '3':
+            bandera = False
                 
-            
-            
-        if opcion == '6':
-            print("Adios")
-            menu = False
- 
-    
-def eliminarcancion():
 
+def eliminarcancion():
+        
         cursor = engine.cursor()
         buscar = input("Ingresa el Nombre del Artista de la Cancion\n")
         busqueda = "select nombre_artistico from artistas where nombre_artistico = %s"
@@ -720,7 +748,7 @@ def cantidaddesuscripciones():
     record = cursor.fetchall()
     print("Cantidad de suscripciones premium por mes en los ultimos 6 meses")
     for i in range (0,len(record)):
-        print(str(i+1)+". "+str(record[i][0])+", " + str(record[i][1]) + "Suscripciones Nuevas")
+        print(str(i+1)+". "+str(record[i][0])+", " + str(record[i][1]) + " Suscripciones Nuevas")
     
     
     
@@ -754,16 +782,15 @@ def usuariosmasactivos():
         print(str(i+1)+". "+str(record[i][0])+", " + str(record[i][1]) + " canciones escuchadas")
         
 banderaTotal = True
-
+cursor = engine.cursor()
 while banderaTotal:
-    opcion = input(" 1. Sign Up\n 2. Login\n 3. Salir \n")
-    if opcion == '1':
+    opcionTotal = input(" 1. Sign Up\n 2. Login\n 3. Salir \n")
+    if opcionTotal == '1':
         banderaSignUp = True
         while banderaSignUp:
             nombre = input("Ingrese su nombre\n")
             usuario = input("Ingrese un usuario\n")
-            contrasena = input("Ingrese su contrasena\n")
-            contrasenaConfirmacion = input("Ingrese nuevamente su contrasena\n")
+            contrasenaConfirmacion = input("Ingrese su contrasena\n")
             suscripcion = input("Seleccione el tipo de suscripcion\n1. Gratis \n2. Premium\n")
             if(suscripcion == '1'):
                 suscripcion = 'gratis'
@@ -779,7 +806,7 @@ while banderaTotal:
 
         
 
-    if opcion =='2':
+    if opcionTotal =='2':
         banderaLogIn = True
         while banderaLogIn:
             usuario=input('Ingrese su usuario\n ')
@@ -794,127 +821,153 @@ while banderaTotal:
                         if(len(nombreartistico) == 0):
                             if(informacion[0][2] == 'gratis'):
                                 print('USUARIO GRATIS')
-                                opcion = input(" 1.Buscar\n 2.Actualizar Suscripcion\n 3.Darse de alta como Artista o Manager\n")
-                    
-                                if opcion == "1":
-                                    menuprincipalNoPremium()
-                                    
-                                elif(opcion == "2"):
-                                    actualizarSuscripcion(usuario)
-                                    print("Suscripcion Actualizada")
-                                    
-                                elif(opcion =="3"):
-                                    nombreartistico = input("Ingresa tu nombre Artistico\n")
-                                    if(len(chequearartista(nombreartistico)) != 0):
-                                        print("Nombre artistico en uso")
+                                banderafree = True
+                                while banderafree:
+                                    opcion = input(" 1.Buscar\n 2.Actualizar Suscripcion\n 3.Darse de alta como Artista o Manager\n 4. Salir\n")
+                        
+                                    if opcion == "1":
+                                        menuprincipalNoPremium()
                                         
-                                    elif(len(chequearartista(nombreartistico)) == 0):
-                                        agregarartista(nombreartistico, usuario)
-                                        print("Nombre Artistico Agregado")
-                                    
+                                    elif(opcion == "2"):
+                                        actualizarSuscripcion(usuario)
+                                        print("Suscripcion Actualizada, inicia sesion nuevamente")
+                                        banderafree = False
+                                        
+                                    elif(opcion =="3"):
+                                        banderaart = True
+                                        while banderaart:
+                                            nombreartistico = input("Ingresa tu nombre Artistico\n")
+                                            if(len(chequearartista(nombreartistico)) != 0):
+                                                print("Nombre artistico en uso")
+                                        
+                                            
+                                            elif(len(chequearartista(nombreartistico)) == 0):
+                                                agregarartista(nombreartistico, usuario)
+                                                print("Nombre Artistico Agregado, inicia sesion nuevamente")
+                                                banderaart = False
+                                                banderafree = False
+                                    elif opcion == "4":
+                                        banderafree = False
                                     
                             elif(informacion[0][2] == 'premium'):
-                                print('USUARIO PREMIUM')            
-                                opcion = input(" 1.Buscar\n 2.Darse de alta como Artista o Manager\n")
-                                if opcion == "1":
-                                    menuprincipalPremium()
-                                
-                                elif(opcion =="2"):
-                                    nombreartistico = input("Ingresa tu nombre Artistico\n")
-                                    if(len(chequearartista(nombreartistico)) != 0):
-                                        print("Nombre artistico en uso")
-                                        
-                                    elif(len(chequearartista(nombreartistico)) == 0):
-                                        agregarartista(nombreartistico, usuario)
-                                        print("Nombre Artistico Agregado")                    
+                                print('USUARIO PREMIUM')
+                                banderapre = True
+                                while banderapre:
+                                    opcion = input(" 1.Buscar\n 2.Darse de alta como Artista o Manager\n 3.Playlist\n 4.Salir\n")
+                                    if opcion == "1":
+                                        menuprincipalPremium()
                                     
+                                    elif(opcion =="2"):
+                                        banderra = True
+                                        while banderra:
+                                            nombreartistico = input("Ingresa tu nombre Artistico\n")
+                                            if(len(chequearartista(nombreartistico)) != 0):
+                                                print("Nombre artistico en uso")
+                                    
+                                            elif(len(chequearartista(nombreartistico)) == 0):
+                                                agregarartista(nombreartistico, usuario)
+                                                print("Nombre Artistico Agregado, inicia sesion nuevamente")
+                                                banderra = False
+                                                banderapre = False
+                                    elif opcion == "3":
+                                        playlist(usuario)
+                                    elif opcion == "4":
+                                        banderapre = False
+                                        
                         elif(len(nombreartistico) != 0):
                             if(informacion[0][2] == 'gratis'):
                                 print('USUARIO GRATIS')
                                 print(nombreartistico[0][0])
-                                opcion = input(" 1.Buscar\n 2.Actualizar Suscripcion\n 3.Registrar Album\n 4.Registrar Track\n")
-                                if opcion == "1":
-                                    menuprincipalNoPremium()
+                                banderagra = True
+                                while banderagra:
+                                    opcion = input(" 1.Buscar\n 2.Actualizar Suscripcion\n 3.Registrar Album\n 4.Registrar Track\n 5. Salir \n")
+                                    if opcion == "1":
+                                        menuprincipalNoPremium()
+                                        
+                                    elif(opcion == "2"):
+                                        actualizarSuscripcion(usuario)
+                                        print("Suscripcion Actualizada, inicia sesion nuevamente")
+                                        banderagra = False
+                                        
+                                    elif(opcion =="3"):
+                                        banderaAlbum = True
+                                        nombrealbum = input("Ingresa el nombre del Album a registrar\n")
+                                        while banderaAlbum:
+                                            codigoalbum = str((random.randint(3, 100000)))
+                                            query = "select codigo_album from albumes"
+                                            cursor.execute(query)
+                                            lista = cursor.fetchall()
+                                            if codigoalbum not in lista:
+                                                agregaralbum(nombrealbum, nombreartistico[0][0], codigoalbum)
+                                                print("Album Agregado Correctamente")
+                                                banderaAlbum = False
+                                            else:
+                                                banderaAlbum = True
                                     
-                                elif(opcion == "2"):
-                                    actualizarSuscripcion(usuario)
-                                    print("Suscripcion Actualizada")
-                                    
-                                elif(opcion =="3"):
-                                    banderaAlbum = True
-                                    nombrealbum = input("Ingresa el nombre del Album a registrar\n")
-                                    while banderaAlbum:
-                                        codigoalbum = str((random.randint(3, 100000)))
-                                        query = "select codigo_album from albumes"
-                                        cursor.execute(query)
-                                        lista = cursor.fetchall()
-                                        if codigoalbum not in lista:
-                                            agregaralbum(nombrealbum, nombreartistico[0][0], codigoalbum)
-                                            print("Album Agregado Correctamente")
-                                            banderaAlbum = False
-                                        else:
-                                            banderaAlbum = True
-                                
-                                elif(opcion =="4"):
-                                    banderaCancion = True
-                                    cancion = input('Ingresa el nombre de la cancion a registrar\n')
-                                    while banderaCancion:
-                                        codigocancion = (random.randint(3, 100000))
-                                        query = "select codigo_cancion from canciones"
-                                        cursor.execute(query)
-                                        lista = cursor.fetchall()
-                                        if codigocancion not in lista:
-                                            banderaCancion = False
-                                            generos = []
-                                            while True:
-                                                print("Ingresa el numero del genero o generos a elegir o ingresa '0' para concluir con los generos\n")
-                                                for x in range (len(mostrargeneros())):
-                                                    print(str(x+1) + ". " + mostrargeneros()[x][0])
-                                                generoelegido = int(input())
-                                                
+                                    elif(opcion =="4"):
+                                        banderaCancion = True
+                                        cancion = input('Ingresa el nombre de la cancion a registrar\n')
+                                        while banderaCancion:
+                                            codigocancion = (random.randint(3, 100000))
+                                            query = "select codigo_cancion from canciones"
+                                            cursor.execute(query)
+                                            lista = cursor.fetchall()
+                                            if codigocancion not in lista:
+                                                banderaCancion = False
+                                                generos = []
+                                                while True:
+                                                    print("Ingresa el numero del genero o generos a elegir o ingresa '0' para concluir con los generos\n")
+                                                    for x in range (len(mostrargeneros())):
+                                                        print(str(x+1) + ". " + mostrargeneros()[x][0])
+                                                    generoelegido = int(input())
+                                                    
 
-                                                if(len(generos) != 0 and generoelegido == 0 ):                                
-                                                    break
-                                                
-                                                elif (mostrargeneros()[generoelegido-1][0] not in generos and generoelegido != 0):
-                                                    generos.append(mostrargeneros()[generoelegido-1][0])
-                                                    print("Genero agregado")
-                                                else:
-                                                    print("Genero ya habia sido agregado anteriormente")
-                                            opcion = input(" 1.Agregar en album existente\n 2.Agregar como sencillo\n ")
-                                            if(opcion == "1"):
-                                                if(len(seleccionaralbumdeartista(nombreartistico[0][0])) !=0):       
-                                                    for x in range (len(seleccionaralbumdeartista(nombreartistico[0][0]))):
-                                                        print(str(x+1) + ". " + seleccionaralbumdeartista(nombreartistico[0][0])[x][0] + ", " +seleccionaralbumdeartista(nombreartistico[0][0])[x][2])
-                                                        
-                                                    albumelegido = int(input("Ingresa el numero del album en el que la agregaras\n"))
+                                                    if(len(generos) != 0 and generoelegido == 0 ):                                
+                                                        break
+                                                    
+                                                    elif (mostrargeneros()[generoelegido-1][0] not in generos and generoelegido != 0):
+                                                        generos.append(mostrargeneros()[generoelegido-1][0])
+                                                        print("Genero agregado")
+                                                    else:
+                                                        print("Genero ya habia sido agregado anteriormente")
+                                                opcion = input(" 1.Agregar en album existente\n 2.Agregar como sencillo\n ")
+                                                if(opcion == "1"):
+                                                    if(len(seleccionaralbumdeartista(nombreartistico[0][0])) !=0):       
+                                                        for x in range (len(seleccionaralbumdeartista(nombreartistico[0][0]))):
+                                                            print(str(x+1) + ". " + seleccionaralbumdeartista(nombreartistico[0][0])[x][0] + ", " +seleccionaralbumdeartista(nombreartistico[0][0])[x][2])
+                                                            
+                                                        albumelegido = int(input("Ingresa el numero del album en el que la agregaras\n"))
+                                                        agregarcancion(cancion, codigocancion)
+                                                        agregarcanciongenero(codigocancion, generos)
+                                                        agregarcancionartista(codigocancion, nombreartistico[0][0])
+                                                        ingresaralbumcancion(codigocancion, seleccionaralbumdeartista(nombreartistico[0][0])[albumelegido-1][3])
+                                                        print("Cancion Agregada Correctamente")
+                                                    else:
+                                                        print("No tienes ningun album creado, primero crea uno o agrega cancion como sencillo")
+                                                    
+                                                if(opcion == "2"):
                                                     agregarcancion(cancion, codigocancion)
                                                     agregarcanciongenero(codigocancion, generos)
                                                     agregarcancionartista(codigocancion, nombreartistico[0][0])
-                                                    ingresaralbumcancion(codigocancion, seleccionaralbumdeartista(nombreartistico[0][0])[albumelegido-1][3])
-                                                    print("Cancion Agregada Correctamente")
-                                                else:
-                                                    print("No tienes ningun album creado, primero crea uno o agrega cancion como sencillo")
+                                                    banderaCodigo = True
+                                                    while banderaCodigo:
+                                                        codigoalbum = str((random.randint(3, 100000)))
+                                                        query = "select codigo_album from albumes"
+                                                        cursor.execute(query)
+                                                        lista = cursor.fetchall()
+                                                        if codigoalbum not in lista:
+                                                            agregaralbum(cancion, nombreartistico[0][0], codigoalbum)
+                                                            ingresaralbumcancion(codigocancion, codigoalbum)
+                                                            print("Cancion Agregada Correctamente")
+                                                            banderaCodigo = False
+                                                        else:
+                                                            banderaCodigo = True
+                                            else:
+                                                banderaCancion = True
                                                 
-                                            if(opcion == "2"):
-                                                agregarcancion(cancion, codigocancion)
-                                                agregarcanciongenero(codigocancion, generos)
-                                                agregarcancionartista(codigocancion, nombreartistico[0][0])
-                                                banderaCodigo = True
-                                                while banderaCodigo:
-                                                    codigoalbum = str((random.randint(3, 100000)))
-                                                    query = "select codigo_album from albumes"
-                                                    cursor.execute(query)
-                                                    lista = cursor.fetchall()
-                                                    if codigoalbum not in lista:
-                                                        agregaralbum(cancion, nombreartistico[0][0], codigoalbum)
-                                                        ingresaralbumcancion(codigocancion, codigoalbum)
-                                                        print("Cancion Agregada Correctamente")
-                                                        banderaCodigo = False
-                                                    else:
-                                                        banderaCodigo = True
-                                        else:
-                                            banderaCancion = True
+                                    elif opcion == "5":
+                                        bannderaCancion = False
+                                        
                                         
                     
                                    
@@ -922,209 +975,256 @@ while banderaTotal:
                             elif(informacion[0][2] == 'premium'):
                                 print('USUARIO PREMIUM')
                                 print(nombreartistico[0][0])
-                                opcion = input(" 1.Buscar\n 2.Registrar Album\n 3.Registrar Track\n")
-                                
-                                if (opcion == "1"):
-                                    menuprincipalPremium()
+                                banderaaa = True
+                                while banderaaa:
+                                    opcion = input(" 1.Buscar\n 2.Registrar Album\n 3.Registrar Track\n 4.Playlist \n 5.Salir \n")
                                     
-                                elif (opcion == "2"):
-                                    banderaAlbum = True
-                                    nombrealbum = input("Ingresa el nombre del Album a registrar\n")
-                                    while banderaAlbum:
-                                        codigoalbum = str((random.randint(3, 100000)))
-                                        query = "select codigo_album from albumes"
-                                        cursor.execute(query)
-                                        lista = cursor.fetchall()
-                                        if codigoalbum not in lista:
-                                            agregaralbum(nombrealbum, nombreartistico[0][0],codigoalbum)
-                                            print("Album Agregado Correctamente")
-                                            banderaAlbum = False
-                                        else:
-                                            banderaAlbum = True
-
+                                    if (opcion == "1"):
+                                        menuprincipalPremium()
                                         
-                                elif (opcion == "3"):
-                                    banderaCancion = True
-                                    cancion = input('Ingresa el nombre de la cancion a registrar\n')
-                                    while banderaCancion:
-                                        codigocancion = (random.randint(3, 100000))
-                                        query = "select codigo_cancion from canciones"
-                                        cursor.execute(query)
-                                        lista = cursor.fetchall()
-                                        if codigocancion not in lista:
-                                            generos = []
-                                            banderaCancion = False
-                                            while True:
-                                                print("Ingresa el numero del genero o generos a elegir o ingresa '0' para concluir con los generos\n")
-                                                for x in range (len(mostrargeneros())):
-                                                    print(str(x+1) + ". " + mostrargeneros()[x][0])
-                                                generoelegido = int(input())
-                                                
+                                    elif (opcion == "2"):
+                                        banderaAlbum = True
+                                        nombrealbum = input("Ingresa el nombre del Album a registrar\n")
+                                        while banderaAlbum:
+                                            codigoalbum = str((random.randint(3, 100000)))
+                                            query = "select codigo_album from albumes"
+                                            cursor.execute(query)
+                                            lista = cursor.fetchall()
+                                            if codigoalbum not in lista:
+                                                agregaralbum(nombrealbum, nombreartistico[0][0],codigoalbum)
+                                                print("Album Agregado Correctamente")
+                                                banderaAlbum = False
+                                            else:
+                                                banderaAlbum = True
 
-                                                if(len(generos) != 0 and generoelegido == 0 ):                                
-                                                    break
-                                                
-                                                elif (mostrargeneros()[generoelegido-1][0] not in generos and generoelegido != 0):
-                                                    generos.append(mostrargeneros()[generoelegido-1][0])
-                                                    print("Genero agregado")
-                                                else:
-                                                    print("Genero ya habia sido agregado anteriormente")
-                                            opcion = input(" 1.Agregar en album existente\n 2.Agregar como sencillo\n ")
-                                            if(opcion == "1"):
-                                                if(len(seleccionaralbumdeartista(nombreartistico[0][0])) !=0):       
-                                                    for x in range (len(seleccionaralbumdeartista(nombreartistico[0][0]))):
-                                                        print(str(x+1) + ". " + seleccionaralbumdeartista(nombreartistico[0][0])[x][0] + ", " +seleccionaralbumdeartista(nombreartistico[0][0])[x][2])
+                                            
+                                    elif (opcion == "3"):
+                                        banderaCancion = True
+                                        cancion = input('Ingresa el nombre de la cancion a registrar\n')
+                                        while banderaCancion:
+                                            codigocancion = (random.randint(3, 100000))
+                                            query = "select codigo_cancion from canciones"
+                                            cursor.execute(query)
+                                            lista = cursor.fetchall()
+                                            if codigocancion not in lista:
+                                                generos = []
+                                                banderaCancion = False
+                                                while True:
+                                                    print("Ingresa el numero del genero o generos a elegir o ingresa '0' para concluir con los generos\n")
+                                                    for x in range (len(mostrargeneros())):
+                                                        print(str(x+1) + ". " + mostrargeneros()[x][0])
+                                                    generoelegido = int(input())
+                                                    
+
+                                                    if(len(generos) != 0 and generoelegido == 0 ):                                
+                                                        break
+                                                    
+                                                    elif (mostrargeneros()[generoelegido-1][0] not in generos and generoelegido != 0):
+                                                        generos.append(mostrargeneros()[generoelegido-1][0])
+                                                        print("Genero agregado")
+                                                    else:
+                                                        print("Genero ya habia sido agregado anteriormente")
+                                                opcion = input(" 1.Agregar en album existente\n 2.Agregar como sencillo\n ")
+                                                if(opcion == "1"):
+                                                    if(len(seleccionaralbumdeartista(nombreartistico[0][0])) !=0):       
+                                                        for x in range (len(seleccionaralbumdeartista(nombreartistico[0][0]))):
+                                                            print(str(x+1) + ". " + seleccionaralbumdeartista(nombreartistico[0][0])[x][0] + ", " +seleccionaralbumdeartista(nombreartistico[0][0])[x][2])
+                                                            
+                                                        albumelegido = int(input("Ingresa el numero del album en el que la agregaras\n"))
+                                                        agregarcancion(cancion, codigocancion)
+                                                        agregarcanciongenero(codigocancion, generos)
+                                                        agregarcancionartista(codigocancion, nombreartistico[0][0])
+                                                        ingresaralbumcancion(codigocancion, seleccionaralbumdeartista(nombreartistico[0][0])[albumelegido-1][3])
+                                                        print("Cancion Agregada Correctamente")
                                                         
-                                                    albumelegido = int(input("Ingresa el numero del album en el que la agregaras\n"))
+                                                    else:
+                                                        print("No tienes ningun album creado, primero crea uno o agrega cancion como sencillo")
+                                                        
+                                                if(opcion == "2"):
                                                     agregarcancion(cancion, codigocancion)
                                                     agregarcanciongenero(codigocancion, generos)
                                                     agregarcancionartista(codigocancion, nombreartistico[0][0])
-                                                    ingresaralbumcancion(codigocancion, seleccionaralbumdeartista(nombreartistico[0][0])[albumelegido-1][3])
-                                                    print("Cancion Agregada Correctamente")
-                                                    
-                                                else:
-                                                    print("No tienes ningun album creado, primero crea uno o agrega cancion como sencillo")
-                                                    
-                                            if(opcion == "2"):
-                                                agregarcancion(cancion, codigocancion)
-                                                agregarcanciongenero(codigocancion, generos)
-                                                agregarcancionartista(codigocancion, nombreartistico[0][0])
-                                                banderaAlbum = True
-                                                while banderaAlbum:
-                                                    codigoalbum = str((random.randint(3, 100000)))
-                                                    query = "select codigo_album from albumes"
-                                                    cursor.execute(query)
-                                                    lista = cursor.fetchall()
-                                                    if codigoalbum not in lista:
-                                                        agregaralbum(cancion, nombreartistico[0][0], codigoalbum)
-                                                        ingresaralbumcancion(codigocancion, codigoalbum)
-                                                        print("Cancion Agregada Correctamente")
-                                                        codigoalbum = False
-                                                    else:
-                                                        codigoalbum = True
-                                    else:
-                                        banderaCancion = True
-                                        
+                                                    banderaAlbum = True
+                                                    while banderaAlbum:
+                                                        codigoalbum = str((random.randint(3, 100000)))
+                                                        query = "select codigo_album from albumes"
+                                                        cursor.execute(query)
+                                                        lista = cursor.fetchall()
+                                                        if codigoalbum not in lista:
+                                                            agregaralbum(cancion, nombreartistico[0][0], codigoalbum)
+                                                            ingresaralbumcancion(codigocancion, codigoalbum)
+                                                            print("Cancion Agregada Correctamente")
+                                                            codigoalbum = False
+                                                        else:
+                                                            codigoalbum = True
+                                        else:
+                                            banderaCancion = True
+                                    elif opcion == "4":
+                                        playlist(usuario)
+                                    elif opcion == "5":
+                                        banderaaa = False
+                                    
                     elif(informacion[0][3] == 'Administrador'):
                         if(len(nombreartistico) == 0):      
                             if(informacion[0][2] == 'premium'):
                                 print('ADMINISTRADOR')
-                                print('USUARIO PREMIUM')            
-                                opcion = input(" 1.Buscar\n 2.Darse de alta como Artista o Manager\n 3.Inactivar cancion del catalogo\n 4.Modificar cancion\n 5.Modificar Artista\n 6.Eliminar una cancion\n 7.Eliminar album\n 8.Eliminar artista\n 9.Reporteria\n")
-                                if opcion == "1":
-                                    menuprincipalPremium()
-                                
-                                elif(opcion =="2"):
-                                    nombreartistico = input("Ingresa tu nombre Artistico\n")
-                                    if(len(chequearartista(nombreartistico)) != 0):
-                                        print("Nombre artistico en uso")
-                                        
-                                    elif(len(chequearartista(nombreartistico)) == 0):
-                                        agregarartista(nombreartistico, usuario)
-                                        print("Nombre Artistico Agregado")
-                                        
-                                if opcion =="3":
-                                    cursor = engine.cursor()
-                                    buscar = input("Nombre de la cancion\n")
-                                    busqueda = "select t.nombre_artistico,(select c.cancion from canciones c where c.cancion = %s and c.codigo_cancion = t.codigo_cancion) from tiene_artista_cancion t where t.codigo_cancion in (select c.codigo_cancion from canciones c where c.cancion = %s)"
-                                    cursor.execute(busqueda,(buscar,buscar,))
-                                    record = cursor.fetchall()                       
-                                    for i in range (0,len(record)):
-                                        print(str(i+1)+". "+str(record[i]))
+                                print('USUARIO PREMIUM')
+                                banderaAdmin = True
+                                while banderaAdmin:
+                                    opcion = input(" 1.Buscar\n 2.Darse de alta como Artista o Manager\n 3.Inactivar cancion del catalogo\n 4.Modificar cancion\n 5.Modificar Artista\n 6.Modificar Album\n 7.Eliminar una cancion\n 8.Eliminar album\n 9.Eliminar artista\n 10.Reporteria\n 11. Playlist\n 12. Salir\n")
+                                    if opcion == "1":
+                                        menuprincipalPremium()
                                     
-                                    cancion = int(input ("Ingrese el numero de opcion que desea:\n"))
-                                    codigoCancion = "select c.codigo_cancion from canciones c where c.cancion = %s"
-                                    cursor.execute(codigoCancion,(buscar,))
-                                    histo = cursor.fetchall()
-                                    historial = histo[0][0]
-                                    cambiarEstado = "update canciones set estado = 'inactiva' where codigo_cancion = %s"
-                                    cursor.execute(cambiarEstado,(historial,))
-                                    engine.commit()
-                                    cursor.close()
-                                    
-                                if opcion == "4":
-                                    bandera = True
-                                    cursor = engine.cursor()
-                                    buscar = input("Nombre de la cancion\n")
-                                    busqueda = "select t.nombre_artistico,(select c.cancion from canciones c where c.cancion = %s and c.codigo_cancion = t.codigo_cancion) from tiene_artista_cancion t where t.codigo_cancion in (select c.codigo_cancion from canciones c where c.cancion = %s)"
-                                    cursor.execute(busqueda,(buscar,buscar,))
-                                    record = cursor.fetchall()                       
-                                    for i in range (0,len(record)):
-                                        print(str(i+1)+". "+str(record[i]))
-                                    
-                                    cancion = int(input ("Ingrese el numero de opcion que desea:\n"))
-                                    codigoCancion = "select c.codigo_cancion from canciones c where c.cancion = %s"
-                                    cursor.execute(codigoCancion,(buscar,))
-                                    histo = cursor.fetchall()
-                                    historial = histo[0][0]
-                                    while bandera:
-                                        opcion = input("¿Desea cambiar el nombre de la cancion?\n 1. Si\n 2.No\n")
-                                        if opcion == '1':
-                                            nombre = input("Ingrese el nuevo nombre de la cancion: \n")
-                                            cambiarEstado = "update canciones set cancion = %s where codigo_cancion = %s"
-                                            cursor.execute(cambiarEstado,(nombre,historial,))
-                                            engine.commit()
-                                            cursor.close()
-                                        if opcion == '2':
-                                            bandera = False
-                                            
-                                    
-                                if opcion == "5":
-                                    bandera = True
-                                    cursor = engine.cursor()
-                                    buscar = input("Nombre del artista\n")
-                                    busqueda = "select nombre_artistico from artistas where nombre_artistico =%s"
-                                    cursor.execute(busqueda,(buscar,))
-                                    record = cursor.fetchall()                       
-                                    for i in range (0,len(record)):
-                                        print(str(i+1)+". "+str(record[i]))
-                                    
-                                    cancion = int(input ("Ingrese el numero de opcion que desea:\n"))
-                                    codigoCancion = "select a.usuario from artistas a where a.nombre_artistico = %s"
-                                    cursor.execute(codigoCancion,(buscar,))
-                                    histo = cursor.fetchall()
-                                    historial = histo[0][0]
-                    
-                                    while bandera:
-                                        opcion = input("¿Desea cambiar el nombre del artista?\n 1. Si\n 2.No\n")
-                                        if opcion == '1':
-                                            nombre = input("Ingrese el nuevo nombre del artista: \n")
-                                            cambiarEstado = "update artistas set nombre_artistico = %s where usuario = %s"
-                                            cursor.execute(cambiarEstado,(nombre,historial,))
-                                            engine.commit()
-                                            cursor.close()
-                                        if opcion == '2':
-                                            bandera = False
-                                            
-                                elif(opcion =="6"):
-                                    eliminarcancion()
-                                    
-                                elif(opcion =="7"):
-                                    eliminaralbum()
-                                    
-                                elif(opcion =="8"):
-                                    eliminarartista()
-                                    
-                                elif(opcion == "9"):
-                                    opcion = input(" 1.Albumes mas recientes de la ultima semana\n 2.Artistas con popularidad creciente en los ultimos tres meses\n 3.Cantidad de nuevas suscripciones mensuales durante los ultimos seis meses\n 4.Artistas con mayor producción musical\n 5.Generos mas populares\n 6.Usuarios mas activos en la plataforma\n")
-                                    if(opcion == "1"):
-                                        albumesmasrecientesultimasemana()
-                                        
                                     elif(opcion =="2"):
-                                        aumentopopularidad3meses()
-                                    elif opcion == "3":
-                                        cantidaddesuscripciones()
+                                        banddera = True
+                                        while banddera:
+                                            nombreartistico = input("Ingresa tu nombre Artistico\n")
+                                            if(len(chequearartista(nombreartistico)) != 0):
+                                                print("Nombre artistico en uso")
+                                                
+                                            elif(len(chequearartista(nombreartistico)) == 0):
+                                                agregarartista(nombreartistico, usuario)
+                                                print("Nombre Artistico Agregado, inicia sesion nuevamente")
+                                                banddera = False
+                                                banderaAdmin = False
+                                            
+                                    if opcion =="3":
+                                        cursor = engine.cursor()
+                                        buscar = input("Nombre de la cancion\n")
+                                        busqueda = "select t.nombre_artistico,(select c.cancion from canciones c where c.cancion = %s and c.codigo_cancion = t.codigo_cancion and c.estado = 'activa') from tiene_artista_cancion t intersect select tac.nombre_artistico, (select c2.cancion  from canciones c2 where c2.codigo_cancion=tac.codigo_cancion and c2.estado ='activa') as canciones from tiene_artista_cancion tac where tac.codigo_cancion in(select c.codigo_cancion from canciones c where c.estado = 'activa')"
+                                        cursor.execute(busqueda,(buscar,))
+                                        record = cursor.fetchall()                       
+                                        for i in range (0,len(record)):
+                                            print(str(i+1)+". "+str(record[i][0])+", "+str(record[i][1]))
                                         
-                                    elif(opcion =="4"):
-                                        artistasmayorproduccion()
+                                        cancion = int(input ("Ingrese el numero de opcion que desea:\n"))
+                                        codigoCancion = "select c.codigo_cancion from canciones c where c.cancion = %s"
+                                        cursor.execute(codigoCancion,(buscar,))
+                                        histo = cursor.fetchall()
+                                        historial = histo[0][0]
+                                        cambiarEstado = "update canciones set estado = 'inactiva' where codigo_cancion = %s"
+                                        cursor.execute(cambiarEstado,(historial,))
+                                        engine.commit()
+                                        cursor.close()
+                                        print("Cancion desactivada")
+                                    if opcion == "4":
+                                        bandera = True
+                                        cursor = engine.cursor()
+                                        buscar = input("Nombre de la cancion\n")
+                                        busqueda = "select t.nombre_artistico,(select c.cancion from canciones c where c.cancion = %s and c.codigo_cancion = t.codigo_cancion and c.estado = 'activa') from tiene_artista_cancion t intersect select tac.nombre_artistico, (select c2.cancion  from canciones c2 where c2.codigo_cancion=tac.codigo_cancion and c2.estado ='activa') as canciones from tiene_artista_cancion tac where tac.codigo_cancion in(select c.codigo_cancion from canciones c where c.estado = 'activa')"
+                                        cursor.execute(busqueda,(buscar,))
+                                        record = cursor.fetchall()                       
+                                        for i in range (0,len(record)):
+                                            print(str(i+1)+". "+str(record[i][0])+", "+str(record[i][1]))
                                         
-                                    elif(opcion == "5"):
-                                        generosmaspopulares()
+                                        cancion = int(input ("Ingrese el numero de opcion que desea:\n"))
+                                        codigoCancion = "select c.codigo_cancion from canciones c where c.cancion = %s"
+                                        cursor.execute(codigoCancion,(buscar,))
+                                        histo = cursor.fetchall()
+                                        historial = histo[0][0]
+                                        while bandera:
+                                            opcion = input("¿Desea cambiar el nombre de la cancion?\n 1.Si\n 2.No\n")
+                                            if opcion == '1':
+                                                nombre = input("Ingrese el nuevo nombre de la cancion: \n")
+                                                cambiarEstado = "update canciones set cancion = %s where codigo_cancion = %s"
+                                                cursor.execute(cambiarEstado,(nombre,historial,))
+                                                engine.commit()
+                                                cursor.close()
+                                                print("Cancion Modificada")
+                                                bandera = False
+                                            if opcion == '2':
+                                                bandera = False
+                                                
                                         
-                                    elif(opcion =="6"):
-                                        usuariosmasactivos()
+                                    if opcion == "5":
+                                        bandera = True
+                                        cursor = engine.cursor()
+                                        buscar = input("Nombre del artista\n")
+                                        busqueda = "select nombre_artistico from artistas where nombre_artistico =%s"
+                                        cursor.execute(busqueda,(buscar,))
+                                        record = cursor.fetchall()                       
+                                        for i in range (0,len(record)):
+                                            print(str(i+1)+". "+str(record[i]))
                                         
-                                                          
+                                        cancion = int(input ("Ingrese el numero de opcion que desea:\n"))
+                                        codigoCancion = "select a.usuario from artistas a where a.nombre_artistico = %s"
+                                        cursor.execute(codigoCancion,(buscar,))
+                                        histo = cursor.fetchall()
+                                        historial = histo[0][0]
+                        
+                                        while bandera:
+                                            opcion = input("¿Desea cambiar el nombre del artista?\n 1.Si\n 2.No\n")
+                                            if opcion == '1':
+                                                nombre = input("Ingrese el nuevo nombre del artista: \n")
+                                                cambiarEstado = "update artistas set nombre_artistico = %s where usuario = %s"
+                                                cursor.execute(cambiarEstado,(nombre,historial,))
+                                                engine.commit()
+                                                cursor.close()
+                                                print("Artista Modificado")
+                                                bandera = False
+                                            if opcion == '2':
+                                                bandera = False
+                                    
+                                    elif opcion == "6":
+                                        bandera = True
+                                        cursor = engine.cursor()
+                                        buscar = input("Nombre del album\n")
+                                        busqueda = "select nombre_artistico, album from albumes where album = %s"
+                                        cursor.execute(busqueda,(buscar,))
+                                        record = cursor.fetchall()                       
+                                        for i in range (0,len(record)):
+                                            print(str(i+1)+". "+str(record[i][0])+", "+str(record[i][1]))
+                                        
+                                        cancion = int(input ("Ingrese el numero de opcion que desea:\n"))
+                                        codigoCancion = "select codigo_album from albumes where album = %s"
+                                        cursor.execute(codigoCancion,(buscar,))
+                                        histo = cursor.fetchall()
+                                        historial = histo[0][0]
+                                        while bandera:
+                                            opcion = input("¿Desea cambiar el nombre del album?\n 1.Si\n 2.No\n")
+                                            if opcion == '1':
+                                                nombre = input("Ingrese el nuevo nombre del album: \n")
+                                                cambiarEstado = "update albumes set album = %s where codigo_album = %s"
+                                                cursor.execute(cambiarEstado,(nombre,historial,))
+                                                engine.commit()
+                                                cursor.close()
+                                                print("Album Modificado")
+                                                bandera = False
+                                            if opcion == '2':
+                                                bandera = False
+                                                
+                                    elif(opcion =="7"):
+                                        eliminarcancion()
+                                        
+                                    elif(opcion =="8"):
+                                        eliminaralbum()
+                                        
+                                    elif(opcion =="9"):
+                                        eliminarartista()
+                                        
+                                    elif(opcion == "10"):
+                                        opcion = input(" 1.Albumes mas recientes de la ultima semana\n 2.Artistas con popularidad creciente en los ultimos tres meses\n 3.Cantidad de nuevas suscripciones mensuales durante los ultimos seis meses\n 4.Artistas con mayor producción musical\n 5.Generos mas populares\n 6.Usuarios mas activos en la plataforma\n")
+                                        if(opcion == "1"):
+                                            albumesmasrecientesultimasemana()
+                                            
+                                        elif(opcion =="2"):
+                                            aumentopopularidad3meses()
+                                        elif opcion == "3":
+                                            cantidaddesuscripciones()
+                                            
+                                        elif(opcion =="4"):
+                                            artistasmayorproduccion()
+                                            
+                                        elif(opcion == "5"):
+                                            generosmaspopulares()
+                                            
+                                        elif(opcion =="6"):
+                                            usuariosmasactivos()
+                                        
+                                    elif opcion == "11":
+                                        playlist(usuario)
+                                    elif opcion == "12":
+                                        banderaAdmin = False
                                     
                         elif(len(nombreartistico) != 0):
                                                  
@@ -1133,196 +1233,239 @@ while banderaTotal:
                                 print('ADMINISTRADOR')
                                 print('USUARIO PREMIUM')
                                 print(nombreartistico[0][0])
-                                opcion = input(" 1.Buscar\n 2.Registrar Album\n 3.Registrar Track\n 4.Inactivar cancion del catalogo\n 5.Modificar cancion\n 6.Modificar Artista\n 7.Eliminar una cancion\n 8.Eliminar album\n 9.Eliminar artista\n 10.Reporteria\n")
-                                
-                                if (opcion == "1"):
-                                    menuprincipalPremium()
+                                bandera12 = True
+                                while bandera12:
+                                    opcion = input(" 1.Buscar\n 2.Registrar Album\n 3.Registrar Track\n 4.Inactivar cancion del catalogo\n 5.Modificar cancion\n 6.Modificar Artista\n 7.Modificar Album \n 8.Eliminar una cancion\n 9.Eliminar album\n 10.Eliminar artista\n 11.Reporteria\n 12.Playlist\n 13.Salir\n")
                                     
-                                elif (opcion == "2"):
-                                    banderaAlbum = True
-                                    nombrealbum = input("Ingresa el nombre del Album a registrar\n")
-                                    while banderaAlbum:
-                                        codigoalbum = str((random.randint(3, 100000)))
-                                        query = "select codigo_album from albumes"
-                                        cursor.execute(query)
-                                        lista = cursor.fetchall()
-                                        if codigoalbum not in lista:
-                                            agregaralbum(nombrealbum, nombreartistico[0][0],codigoalbum)
-                                            print("Album Agregado Correctamente")
-                                            banderaAlbum = False
-                                        else:
-                                            banderaAlbum = True
-
+                                    if (opcion == "1"):
+                                        menuprincipalPremium()
                                         
-                                elif (opcion == "3"):
-                                    banderaCancion = True
-                                    cancion = input('Ingresa el nombre de la cancion a registrar\n')
-                                    while banderaCancion:
-                                        codigocancion = (random.randint(3, 100000))
-                                        query = "select codigo_cancion from canciones"
-                                        cursor.execute(query)
-                                        lista = cursor.fetchall()
-                                        if codigocancion not in lista:
-                                            banderaCancion = False
-                                            generos = []
-                                            while True:
-                                                print("Ingresa el numero del genero o generos a elegir o ingresa '0' para concluir con los generos\n")
-                                                for x in range (len(mostrargeneros())):
-                                                    print(str(x+1) + ". " + mostrargeneros()[x][0])
-                                                generoelegido = int(input())
-                                                
+                                    elif (opcion == "2"):
+                                        banderaAlbum = True
+                                        nombrealbum = input("Ingresa el nombre del Album a registrar\n")
+                                        while banderaAlbum:
+                                            codigoalbum = str((random.randint(3, 100000)))
+                                            query = "select codigo_album from albumes"
+                                            cursor.execute(query)
+                                            lista = cursor.fetchall()
+                                            if codigoalbum not in lista:
+                                                agregaralbum(nombrealbum, nombreartistico[0][0],codigoalbum)
+                                                print("Album Agregado Correctamente")
+                                                banderaAlbum = False
+                                            else:
+                                                banderaAlbum = True
 
-                                                if(len(generos) != 0 and generoelegido == 0 ):                                
-                                                    break
-                                                
-                                                elif (mostrargeneros()[generoelegido-1][0] not in generos and generoelegido != 0):
-                                                    generos.append(mostrargeneros()[generoelegido-1][0])
-                                                    print("Genero agregado")
-                                                else:
-                                                    print("Genero ya habia sido agregado anteriormente")
-                                            opcion = input(" 1.Agregar en album existente\n 2.Agregar como sencillo\n ")
-                                            if(opcion == "1"):
-                                                if(len(seleccionaralbumdeartista(nombreartistico[0][0])) !=0):       
-                                                    for x in range (len(seleccionaralbumdeartista(nombreartistico[0][0]))):
-                                                        print(str(x+1) + ". " + seleccionaralbumdeartista(nombreartistico[0][0])[x][0] + ", " +seleccionaralbumdeartista(nombreartistico[0][0])[x][2])
+                                            
+                                    elif (opcion == "3"):
+                                        banderaCancion = True
+                                        cancion = input('Ingresa el nombre de la cancion a registrar\n')
+                                        while banderaCancion:
+                                            codigocancion = (random.randint(3, 100000))
+                                            query = "select codigo_cancion from canciones"
+                                            cursor.execute(query)
+                                            lista = cursor.fetchall()
+                                            if codigocancion not in lista:
+                                                banderaCancion = False
+                                                generos = []
+                                                while True:
+                                                    print("Ingresa el numero del genero o generos a elegir o ingresa '0' para concluir con los generos\n")
+                                                    for x in range (len(mostrargeneros())):
+                                                        print(str(x+1) + ". " + mostrargeneros()[x][0])
+                                                    generoelegido = int(input())
+                                                    
+
+                                                    if(len(generos) != 0 and generoelegido == 0 ):                                
+                                                        break
+                                                    
+                                                    elif (mostrargeneros()[generoelegido-1][0] not in generos and generoelegido != 0):
+                                                        generos.append(mostrargeneros()[generoelegido-1][0])
+                                                        print("Genero agregado")
+                                                    else:
+                                                        print("Genero ya habia sido agregado anteriormente")
+                                                opcion = input(" 1.Agregar en album existente\n 2.Agregar como sencillo\n ")
+                                                if(opcion == "1"):
+                                                    if(len(seleccionaralbumdeartista(nombreartistico[0][0])) !=0):       
+                                                        for x in range (len(seleccionaralbumdeartista(nombreartistico[0][0]))):
+                                                            print(str(x+1) + ". " + seleccionaralbumdeartista(nombreartistico[0][0])[x][0] + ", " +seleccionaralbumdeartista(nombreartistico[0][0])[x][2])
+                                                            
+                                                        albumelegido = int(input("Ingresa el numero del album en el que la agregaras\n"))
+                                                        agregarcancion(cancion, codigocancion)
+                                                        agregarcanciongenero(codigocancion, generos)
+                                                        agregarcancionartista(codigocancion, nombreartistico[0][0])
+                                                        ingresaralbumcancion(codigocancion, seleccionaralbumdeartista(nombreartistico[0][0])[albumelegido-1][3])
+                                                        print("Cancion Agregada Correctamente")
                                                         
-                                                    albumelegido = int(input("Ingresa el numero del album en el que la agregaras\n"))
+                                                    else:
+                                                        print("No tienes ningun album creado, primero crea uno o agrega cancion como sencillo")
+                                                        
+                                                if(opcion == "2"):
                                                     agregarcancion(cancion, codigocancion)
                                                     agregarcanciongenero(codigocancion, generos)
                                                     agregarcancionartista(codigocancion, nombreartistico[0][0])
-                                                    ingresaralbumcancion(codigocancion, seleccionaralbumdeartista(nombreartistico[0][0])[albumelegido-1][3])
-                                                    print("Cancion Agregada Correctamente")
-                                                    
-                                                else:
-                                                    print("No tienes ningun album creado, primero crea uno o agrega cancion como sencillo")
-                                                    
-                                            if(opcion == "2"):
-                                                agregarcancion(cancion, codigocancion)
-                                                agregarcanciongenero(codigocancion, generos)
-                                                agregarcancionartista(codigocancion, nombreartistico[0][0])
-                                                banderaAlbum = True
-                                                while banderaAlbum:
-                                                    codigoalbum = str((random.randint(3, 100000)))
-                                                    query = "select codigo_album from albumes"
-                                                    cursor.execute(query)
-                                                    lista = cursor.fetchall()
-                                                    if codigoalbum not in lista:
-                                                        agregaralbum(cancion, nombreartistico[0][0], codigoalbum)
-                                                        ingresaralbumcancion(codigocancion, codigoalbum)
-                                                        print("Cancion Agregada Correctamente")
-                                                        banderaAlbum = False
-                                                    else:
-                                                        banderaAlbum = True
-                                        else:
-                                            banderaCancion = True
+                                                    banderaAlbum = True
+                                                    while banderaAlbum:
+                                                        codigoalbum = str((random.randint(3, 100000)))
+                                                        query = "select codigo_album from albumes"
+                                                        cursor.execute(query)
+                                                        lista = cursor.fetchall()
+                                                        if codigoalbum not in lista:
+                                                            agregaralbum(cancion, nombreartistico[0][0], codigoalbum)
+                                                            ingresaralbumcancion(codigocancion, codigoalbum)
+                                                            print("Cancion Agregada Correctamente")
+                                                            banderaAlbum = False
+                                                        else:
+                                                            banderaAlbum = True
+                                            else:
+                                                banderaCancion = True
+                                            
+                                    
+                                    if opcion =="4":
+                                        cursor = engine.cursor()
+                                        buscar = input("Nombre de la cancion\n")
+                                        busqueda ="select t.nombre_artistico,(select c.cancion from canciones c where c.cancion = %s and c.codigo_cancion = t.codigo_cancion and c.estado = 'activa') from tiene_artista_cancion t intersect select tac.nombre_artistico, (select c2.cancion  from canciones c2 where c2.codigo_cancion=tac.codigo_cancion and c2.estado ='activa') as canciones from tiene_artista_cancion tac where tac.codigo_cancion in(select c.codigo_cancion from canciones c where c.estado = 'activa')"
+                                        cursor.execute(busqueda,(buscar,))
+                                        record = cursor.fetchall()                       
+                                        for i in range (0,len(record)):
+                                            print(str(i+1)+". "+str(record[i]))
                                         
-                                
-                                if opcion =="4":
-                                    cursor = engine.cursor()
-                                    buscar = input("Nombre de la cancion\n")
-                                    busqueda ="select t.nombre_artistico,(select c.cancion from canciones c where c.cancion = %s and c.codigo_cancion = t.codigo_cancion) from tiene_artista_cancion t where t.codigo_cancion in (select c.codigo_cancion from canciones c where c.cancion = %s)"
-                                    cursor.execute(busqueda,(buscar,buscar,))
-                                    record = cursor.fetchall()                       
-                                    for i in range (0,len(record)):
-                                        print(str(i+1)+". "+str(record[i]))
-                                    
-                                    cancion = int(input ("Ingrese el numero de opcion que desea:\n"))
-                                    codigoCancion = "select c.codigo_cancion from canciones c where c.cancion = %s"
-                                    cursor.execute(codigoCancion,(buscar,))
-                                    histo = cursor.fetchall()
-                                    historial = histo[0][0]
-                                    cambiarEstado = "update canciones set estado = 'inactiva' where codigo_cancion = %s"
-                                    cursor.execute(cambiarEstado,(historial,))
-                                    engine.commit()
-                                    cursor.close()
-                                    
-                                if opcion =="5":
-                                    bandera = True
-                                    cursor = engine.cursor()
-                                    buscar = input("Nombre de la cancion\n")
-                                    busqueda = "select t.nombre_artistico,(select c.cancion from canciones c where c.cancion = %s and c.codigo_cancion = t.codigo_cancion) from tiene_artista_cancion t where t.codigo_cancion in (select c.codigo_cancion from canciones c where c.cancion = %s)"
-                                    cursor.execute(busqueda,(buscar,buscar,))
-                                    record = cursor.fetchall()                       
-                                    for i in range (0,len(record)):
-                                        print(str(i+1)+". "+str(record[i]))
-                                    
-                                    cancion = int(input ("Ingrese el numero de opcion que desea:\n"))
-                                    codigoCancion = "select c.codigo_cancion from canciones c where c.cancion = %s"
-                                    cursor.execute(codigoCancion,(buscar,))
-                                    histo = cursor.fetchall()
-                                    historial = histo[0][0]
-                                    while bandera:
-                                        opcion = input("¿Desea cambiar el nombre de la cancion?\n 1. Si\n 2.No\n")
-                                        if opcion == '1':
-                                            nombre = input("Ingrese el nuevo nombre de la cancion: \n")
-                                            cambiarEstado = "update canciones set cancion = %s where codigo_cancion = %s"
-                                            cursor.execute(cambiarEstado,(nombre,historial,))
-                                            engine.commit()
-                                            cursor.close()
-                                        if opcion == '2':
-                                            bandera = False
-                                    
-                                if opcion == "6":
-                                    bandera = True
-                                    cursor = engine.cursor()
-                                    buscar = input("Nombre del artista\n")
-                                    busqueda = "select nombre_artistico from artistas where nombre_artistico =%s"
-                                    cursor.execute(busqueda,(buscar,))
-                                    record = cursor.fetchall()                       
-                                    for i in range (0,len(record)):
-                                        print(str(i+1)+". "+str(record[i]))
-                                    
-                                    cancion = int(input ("Ingrese el numero de opcion que desea:\n"))
-                                    codigoCancion = "select a.usuario from artistas a where a.nombre_artistico = %s"
-                                    cursor.execute(codigoCancion,(buscar,))
-                                    histo = cursor.fetchall()
-                                    historial = histo[0][0]
-                                    
-                                    while bandera:
-                                        opcion = input("¿Desea cambiar el nombre del artista?\n 1. Si\n 2.No\n")
-                                        if opcion == '1':
-                                            nombre = input("Ingrese el nuevo nombre del artista: \n")
-                                            cambiarEstado = "update artistas set nombre_artistico = %s where usuario = %s"
-                                            cursor.execute(cambiarEstado,(nombre,historial,))
-                                            engine.commit()
-                                            cursor.close()
-                                        if opcion == '2':
-                                            bandera = False
+                                        cancion = int(input ("Ingrese el numero de opcion que desea:\n"))
+                                        codigoCancion = "select c.codigo_cancion from canciones c where c.cancion = %s"
+                                        cursor.execute(codigoCancion,(buscar,))
+                                        histo = cursor.fetchall()
+                                        historial = histo[0][0]
+                                        cambiarEstado = "update canciones set estado = 'inactiva' where codigo_cancion = %s"
+                                        cursor.execute(cambiarEstado,(historial,))
+                                        engine.commit()
+                                        cursor.close()
+                                        print("Cancion desactivada")
                                         
-                                elif(opcion =="7"):
-                                    eliminarcancion()
+                                    if opcion =="5":
+                                        bandera = True
+                                        cursor = engine.cursor()
+                                        buscar = input("Nombre de la cancion\n")
+                                        busqueda = "select t.nombre_artistico,(select c.cancion from canciones c where c.cancion = %s and c.codigo_cancion = t.codigo_cancion and c.estado = 'activa') from tiene_artista_cancion t intersect select tac.nombre_artistico, (select c2.cancion  from canciones c2 where c2.codigo_cancion=tac.codigo_cancion and c2.estado ='activa') as canciones from tiene_artista_cancion tac where tac.codigo_cancion in(select c.codigo_cancion from canciones c where c.estado = 'activa')"
+                                        cursor.execute(busqueda,(buscar,))
+                                        record = cursor.fetchall()                       
+                                        for i in range (0,len(record)):
+                                            print(str(i+1)+". "+str(record[i]))
+                                        
+                                        cancion = int(input ("Ingrese el numero de opcion que desea:\n"))
+                                        codigoCancion = "select c.codigo_cancion from canciones c where c.cancion = %s"
+                                        cursor.execute(codigoCancion,(buscar,))
+                                        histo = cursor.fetchall()
+                                        historial = histo[0][0]
+                                        while bandera:
+                                            opcion = input("¿Desea cambiar el nombre de la cancion?\n 1.Si\n 2.No\n")
+                                            if opcion == '1':
+                                                nombre = input("Ingrese el nuevo nombre de la cancion: \n")
+                                                cambiarEstado = "update canciones set cancion = %s where codigo_cancion = %s"
+                                                cursor.execute(cambiarEstado,(nombre,historial,))
+                                                engine.commit()
+                                                cursor.close()
+                                                print("Cancion Modificada")
+                                                bandera = False
+                                            if opcion == '2':
+                                                bandera = False
                                     
-                                elif(opcion =="8"):
-                                    eliminaralbum()
-                                    
-                                elif(opcion =="9"):
-                                    eliminarartista()
-                                    
-                                elif(opcion == "10"):
-                                    opcion = input(" 1.Albumes mas recientes de la ultima semana\n 2.Artistas con popularidad creciente en los ultimos tres meses\n 3.Cantidad de nuevas suscripciones mensuales durante los ultimos seis meses\n 4.Artistas con mayor producción musical\n 5.Generos mas populares\n 6.Usuarios mas activos en la plataforma\n")
-                                    if(opcion == "1"):
-                                        albumesmasrecientesultimasemana()
+                                    if opcion =="7":
+                                        bandera = True
+                                        cursor = engine.cursor()
+                                        buscar = input("Nombre del album\n")
+                                        busqueda = "select nombre_artistico, album from albumes where album = %s"
+                                        cursor.execute(busqueda,(buscar,))
+                                        record = cursor.fetchall()                       
+                                        for i in range (0,len(record)):
+                                            print(str(i+1)+". "+str(record[i][0])+", "+str(record[i][1]))
                                         
-                                    elif(opcion =="2"):
-                                        aumentopopularidad3meses()
+                                        cancion = int(input ("Ingrese el numero de opcion que desea:\n"))
+                                        codigoCancion = "select codigo_album from albumes where album = %s"
+                                        cursor.execute(codigoCancion,(buscar,))
+                                        histo = cursor.fetchall()
+                                        historial = histo[0][0]
+                                        while bandera:
+                                            opcion = input("¿Desea cambiar el nombre del album?\n 1.Si\n 2.No\n")
+                                            if opcion == '1':
+                                                nombre = input("Ingrese el nuevo nombre del album: \n")
+                                                cambiarEstado = "update albumes set album = %s where codigo_album = %s"
+                                                cursor.execute(cambiarEstado,(nombre,historial,))
+                                                engine.commit()
+                                                cursor.close()
+                                                print("Album Modificado")
+                                                bandera = False
+                                            if opcion == '2':
+                                                bandera = False
+                                         
+                                            
                                         
-                                    elif opcion == "3":
-                                        cantidaddesuscripciones()
+                                    if opcion == "6":
+                                        bandera = True
+                                        cursor = engine.cursor()
+                                        buscar = input("Nombre del artista\n")
+                                        busqueda = "select nombre_artistico from artistas where nombre_artistico =%s"
+                                        cursor.execute(busqueda,(buscar,))
+                                        record = cursor.fetchall()                       
+                                        for i in range (0,len(record)):
+                                            print(str(i+1)+". "+str(record[i]))
                                         
-                                    elif(opcion =="4"):
-                                        artistasmayorproduccion()
+                                        cancion = int(input ("Ingrese el numero de opcion que desea:\n"))
+                                        codigoCancion = "select a.usuario from artistas a where a.nombre_artistico = %s"
+                                        cursor.execute(codigoCancion,(buscar,))
+                                        histo = cursor.fetchall()
+                                        historial = histo[0][0]
                                         
-                                    elif(opcion == "5"):
-                                        generosmaspopulares()
+                                        while bandera:
+                                            opcion = input("¿Desea cambiar el nombre del artista?\n 1.Si\n 2.No\n")
+                                            if opcion == '1':
+                                                nombre = input("Ingrese el nuevo nombre del artista: \n")
+                                                cambiarEstado = "update artistas set nombre_artistico = %s where usuario = %s"
+                                                cursor.execute(cambiarEstado,(nombre,historial,))
+                                                engine.commit()
+                                                cursor.close()
+                                                bandera = False
+                                                print("Artista Modificado")
+                                            if opcion == '2':
+                                                bandera = False
+                                            
+                                    elif(opcion =="8"):
+                                        eliminarcancion()
                                         
-                                    elif(opcion =="6"):
-                                        usuariosmasactivos()
+                                    elif(opcion =="9"):
+                                        eliminaralbum()
+                                        
+                                    elif(opcion =="10"):
+                                        eliminarartista()
+                                        
+                                    elif(opcion == "11"):
+                                        opcion = input(" 1.Albumes mas recientes de la ultima semana\n 2.Artistas con popularidad creciente en los ultimos tres meses\n 3.Cantidad de nuevas suscripciones mensuales durante los ultimos seis meses\n 4.Artistas con mayor producción musical\n 5.Generos mas populares\n 6.Usuarios mas activos en la plataforma\n")
+                                        if(opcion == "1"):
+                                            albumesmasrecientesultimasemana()
+                                            
+                                        elif(opcion =="2"):
+                                            aumentopopularidad3meses()
+                                            
+                                        elif opcion == "3":
+                                            cantidaddesuscripciones()
+                                            
+                                        elif(opcion =="4"):
+                                            artistasmayorproduccion()
+                                            
+                                        elif(opcion == "5"):
+                                            generosmaspopulares()
+                                            
+                                        elif(opcion =="6"):
+                                            usuariosmasactivos()
+                                    elif opcion == "12":
+                                        playlist(usuario)
+                                    elif opcion == "13":
+                                        bandera12 = False
                                                                                             
                                 
                 else:
                     print("Contrasena incorrecta")
             else:
                 print("Usuario no existe")
-    if opcion == "3":
+    if opcionTotal == "3":
         banderaTotal = False
         print("Vuelve pronto")
+
+                                   
